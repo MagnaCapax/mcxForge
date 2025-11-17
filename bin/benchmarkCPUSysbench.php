@@ -16,9 +16,9 @@ require_once __DIR__ . '/../lib/php/Benchmark/SysbenchCpuRunner.php';
 use mcxForge\Benchmark\CpuInfo;
 use mcxForge\Benchmark\SysbenchCpuRunner;
 
-function benchmarkCpuSysbenchMain(array $argv): int
+function benchmarkCPUSysbenchMain(array $argv): int
 {
-    [$duration, $threads, $scoreOnly, $colorEnabled] = benchmarkCpuSysbenchParseArguments($argv);
+    [$duration, $threads, $scoreOnly, $colorEnabled] = benchmarkCPUSysbenchParseArguments($argv);
 
     $runner = new SysbenchCpuRunner();
     $logFile = $runner->buildLogFilePath();
@@ -32,7 +32,7 @@ function benchmarkCpuSysbenchMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCpuSysbench]%s Running sysbench cpu for %ds on %d thread(s)...%s\n",
+                "%s[benchmarkCPUSysbench]%s Running sysbench cpu for %ds on %d thread(s)...%s\n",
                 $titleColor,
                 $resetColor,
                 $duration,
@@ -52,7 +52,7 @@ function benchmarkCpuSysbenchMain(array $argv): int
             fwrite(
                 STDERR,
                 sprintf(
-                    "%s[benchmarkCpuSysbench] sysbench exited with code %d%s\n",
+                    "%s[benchmarkCPUSysbench] sysbench exited with code %d%s\n",
                     $errorColor,
                     $exitCode,
                     $resetColor
@@ -68,7 +68,7 @@ function benchmarkCpuSysbenchMain(array $argv): int
             fwrite(
                 STDERR,
                 sprintf(
-                    "%s[benchmarkCpuSysbench] Warning: could not parse sysbench events per second%s\n",
+                    "%s[benchmarkCPUSysbench] Warning: could not parse sysbench events per second%s\n",
                     $errorColor,
                     $resetColor
                 )
@@ -84,7 +84,7 @@ function benchmarkCpuSysbenchMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCpuSysbench]%s Log file: %s\n",
+                "%s[benchmarkCPUSysbench]%s Log file: %s\n",
                 $titleColor,
                 $resetColor,
                 $logFile
@@ -93,7 +93,7 @@ function benchmarkCpuSysbenchMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCpuSysbench]%s Parsed score: %s%.2f%s events/s (%.2f per thread)\n",
+                "%s[benchmarkCPUSysbench]%s Parsed score: %s%.2f%s events/s (%.2f per thread)\n",
                 $titleColor,
                 $resetColor,
                 $scoreColor,
@@ -112,7 +112,7 @@ function benchmarkCpuSysbenchMain(array $argv): int
 /**
  * @return array{0:int,1:int,2:bool,3:bool}
  */
-function benchmarkCpuSysbenchParseArguments(array $argv): array
+function benchmarkCPUSysbenchParseArguments(array $argv): array
 {
     $duration = 60;
     $threads = CpuInfo::detectLogicalCores();
@@ -128,7 +128,7 @@ function benchmarkCpuSysbenchParseArguments(array $argv): array
 
     foreach ($args as $arg) {
         if ($arg === '--help' || $arg === '-h') {
-            benchmarkCpuSysbenchPrintHelp();
+            benchmarkCPUSysbenchPrintHelp();
             exit(EXIT_OK);
         }
 
@@ -171,10 +171,10 @@ function benchmarkCpuSysbenchParseArguments(array $argv): array
     return [$duration, $threads, $scoreOnly, $colorEnabled];
 }
 
-function benchmarkCpuSysbenchPrintHelp(): void
+function benchmarkCPUSysbenchPrintHelp(): void
 {
     $help = <<<TEXT
-Usage: benchmarkCpuSysbench.php [--duration=SECONDS] [--threads=N] [--score-only] [--no-color]
+Usage: benchmarkCPUSysbench.php [--duration=SECONDS] [--threads=N] [--score-only] [--no-color]
 
 Run a CPU benchmark using sysbench cpu, log output under /tmp, and emit a normalized score:
 
@@ -188,7 +188,7 @@ Options:
   -h, --help          Show this help message.
 
 Notes:
-  - Raw output is appended to /tmp/benchmarkCpuSysbench-YYYYMMDD.log.
+  - Raw output is appended to /tmp/benchmarkCPUSysbench-YYYYMMDD.log.
   - The score is normalized per thread to improve comparability across CPUs.
 
 TEXT;
@@ -197,6 +197,5 @@ TEXT;
 }
 
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    exit(benchmarkCpuSysbenchMain($argv));
+    exit(benchmarkCPUSysbenchMain($argv));
 }
-

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../../lib/php/Benchmark/GeekbenchRunner.php';
 
 use mcxForge\Benchmark\GeekbenchRunner;
 
-final class benchmarkCpuGeekbenchParseScoreTest extends testCase
+final class benchmarkCPUGeekbenchParseScoreTest extends testCase
 {
     public function testParseGeekbench6MultiCorePreferred(): void
     {

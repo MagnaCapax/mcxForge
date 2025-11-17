@@ -1,8 +1,8 @@
-# `benchmarkCpuGeekbench` — CPU Benchmark (Geekbench)
+# `benchmarkCPUGeekbench` — CPU Benchmark (Geekbench)
 
 ## Overview
 
-`benchmarkCpuGeekbench` is a small wrapper around Geekbench 5/6 that:
+`benchmarkCPUGeekbench` is a small wrapper around Geekbench 5/6 that:
 
 - Downloads and extracts the appropriate Geekbench Linux tarball (5 or 6) under `/opt/`.
 - Runs the benchmark binary on the current host.
@@ -21,7 +21,7 @@ This makes it suitable both for operators on a live console and for automation t
 Primary entrypoint:
 
 ```sh
-bin/benchmarkCpuGeekbench.php [--version=5|6] [--score-only] [--no-color]
+bin/benchmarkCPUGeekbench.php [--version=5|6] [--score-only] [--no-color]
 ```
 
 For backward compatibility, `bin/benchmarkGeekbench.php` is also available and forwards to the same implementation.
@@ -72,4 +72,3 @@ Each run appends the raw Geekbench output to the corresponding log file for the 
 
 - `0` – Geekbench ran successfully and a score was parsed.
 - Non‑zero – Preparation, execution, or parsing failed; error details are printed to `stderr`.
-

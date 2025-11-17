@@ -48,7 +48,7 @@ From there, tools are invoked via the CLI scripts under `bin/`. For example:
 bin/storageList.php --format=human
 bin/storageList.php --format=json --smart-only
 bin/storageTestSmart.php --test=short
-bin/benchmarkCpuGeekbench.php --version=6
+bin/benchmarkCPUGeekbench.php --version=6
 ```
 
 On the MCX live rescue system, the surrounding environment is expected to clone or update this repository into `/opt/mcxForge` automatically and invoke the relevant entrypoints as part of hardware qualification or rescue workflows.

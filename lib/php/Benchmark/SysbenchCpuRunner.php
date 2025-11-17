@@ -11,7 +11,7 @@ final class SysbenchCpuRunner
         $now = $now ?? new \DateTimeImmutable('now');
         $date = $now->format('Ymd');
 
-        return sprintf('/tmp/benchmarkCpuSysbench-%s.log', $date);
+        return sprintf('/tmp/benchmarkCPUSysbench-%s.log', $date);
     }
 
     public function buildCommand(int $threads, int $durationSeconds): string
@@ -67,4 +67,3 @@ final class SysbenchCpuRunner
         return is_string($result) && trim($result) !== '';
     }
 }
-

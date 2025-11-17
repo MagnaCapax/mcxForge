@@ -16,9 +16,9 @@ require_once __DIR__ . '/../lib/php/Benchmark/StressNgRunner.php';
 use mcxForge\Benchmark\CpuInfo;
 use mcxForge\Benchmark\StressNgRunner;
 
-function benchmarkCpuStressNgMain(array $argv): int
+function benchmarkCPUStressNgMain(array $argv): int
 {
-    [$duration, $cpuCount, $scoreOnly, $colorEnabled] = benchmarkCpuStressNgParseArguments($argv);
+    [$duration, $cpuCount, $scoreOnly, $colorEnabled] = benchmarkCPUStressNgParseArguments($argv);
 
     $runner = new StressNgRunner();
     $logFile = $runner->buildLogFilePath();
@@ -32,7 +32,7 @@ function benchmarkCpuStressNgMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCpuStressNg]%s Running stress-ng for %ds on %d CPU worker(s)...%s\n",
+                "%s[benchmarkCPUStressNg]%s Running stress-ng for %ds on %d CPU worker(s)...%s\n",
                 $titleColor,
                 $resetColor,
                 $duration,
@@ -52,7 +52,7 @@ function benchmarkCpuStressNgMain(array $argv): int
             fwrite(
                 STDERR,
                 sprintf(
-                    "%s[benchmarkCpuStressNg] stress-ng exited with code %d%s\n",
+                    "%s[benchmarkCPUStressNg] stress-ng exited with code %d%s\n",
                     $errorColor,
                     $exitCode,
                     $resetColor
@@ -68,7 +68,7 @@ function benchmarkCpuStressNgMain(array $argv): int
             fwrite(
                 STDERR,
                 sprintf(
-                    "%s[benchmarkCpuStressNg] Warning: could not parse stress-ng bogo ops/s%s\n",
+                    "%s[benchmarkCPUStressNg] Warning: could not parse stress-ng bogo ops/s%s\n",
                     $errorColor,
                     $resetColor
                 )
@@ -84,7 +84,7 @@ function benchmarkCpuStressNgMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCpuStressNg]%s Log file: %s\n",
+                "%s[benchmarkCPUStressNg]%s Log file: %s\n",
                 $titleColor,
                 $resetColor,
                 $logFile
@@ -93,7 +93,7 @@ function benchmarkCpuStressNgMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCpuStressNg]%s Parsed score: %s%.2f%s bogo ops/s (%.2f per thread)\n",
+                "%s[benchmarkCPUStressNg]%s Parsed score: %s%.2f%s bogo ops/s (%.2f per thread)\n",
                 $titleColor,
                 $resetColor,
                 $scoreColor,
@@ -112,7 +112,7 @@ function benchmarkCpuStressNgMain(array $argv): int
 /**
  * @return array{0:int,1:int,2:bool,3:bool}
  */
-function benchmarkCpuStressNgParseArguments(array $argv): array
+function benchmarkCPUStressNgParseArguments(array $argv): array
 {
     $duration = 120;
     $cpuCount = CpuInfo::detectLogicalCores();
@@ -128,7 +128,7 @@ function benchmarkCpuStressNgParseArguments(array $argv): array
 
     foreach ($args as $arg) {
         if ($arg === '--help' || $arg === '-h') {
-            benchmarkCpuStressNgPrintHelp();
+            benchmarkCPUStressNgPrintHelp();
             exit(EXIT_OK);
         }
 
@@ -171,10 +171,10 @@ function benchmarkCpuStressNgParseArguments(array $argv): array
     return [$duration, $cpuCount, $scoreOnly, $colorEnabled];
 }
 
-function benchmarkCpuStressNgPrintHelp(): void
+function benchmarkCPUStressNgPrintHelp(): void
 {
     $help = <<<TEXT
-Usage: benchmarkCpuStressNg.php [--duration=SECONDS] [--cpu-count=N] [--score-only] [--no-color]
+Usage: benchmarkCPUStressNg.php [--duration=SECONDS] [--cpu-count=N] [--score-only] [--no-color]
 
 Run a CPU stress test using stress-ng, log output under /tmp, and emit a normalized score:
 
@@ -188,7 +188,7 @@ Options:
   -h, --help          Show this help message.
 
 Notes:
-  - Raw output is appended to /tmp/benchmarkCpuStressNg-YYYYMMDD.log.
+  - Raw output is appended to /tmp/benchmarkCPUStressNg-YYYYMMDD.log.
   - The score is normalized per thread to improve comparability across CPUs.
 
 TEXT;
@@ -197,6 +197,5 @@ TEXT;
 }
 
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    exit(benchmarkCpuStressNgMain($argv));
+    exit(benchmarkCPUStressNgMain($argv));
 }
-

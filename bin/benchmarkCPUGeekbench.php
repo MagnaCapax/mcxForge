@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 /**
- * benchmarkGeekbench.php
+ * benchmarkCPUGeekbench.php
  *
  * Download and run Geekbench 5 or 6, write results to a log file under /tmp,
  * and print a summary plus a final programmatic score line:
@@ -215,4 +215,3 @@ TEXT;
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit(benchmarkGeekbenchMain($argv));
 }
-

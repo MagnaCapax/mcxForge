@@ -11,7 +11,7 @@ final class StressNgRunner
         $now = $now ?? new \DateTimeImmutable('now');
         $date = $now->format('Ymd');
 
-        return sprintf('/tmp/benchmarkCpuStressNg-%s.log', $date);
+        return sprintf('/tmp/benchmarkCPUStressNg-%s.log', $date);
     }
 
     public function buildCommand(int $cpuCount, int $durationSeconds): string
@@ -76,4 +76,3 @@ final class StressNgRunner
         return is_string($result) && trim($result) !== '';
     }
 }
-
