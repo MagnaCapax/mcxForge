@@ -79,6 +79,9 @@ Any deviations from this layout must be captured in an ADR before implementation
   - Use long, kebab‑case flags for clarity (e.g., `--device`, `--target-disk`, `--profile-name`).
   - Avoid short flags unless they are truly standard (`-h`/`--help`, `-v`/`--version`).
   - Do not introduce aliases for the same option.
+- Acronyms:
+  - Treat common hardware acronyms as all‑caps when they stand alone in names (e.g., `CPU`, `RAM`, `SSD`, `NVMe`).
+  - In identifiers and filenames that combine acronyms with other words, keep the acronym in all‑caps and reuse a single spelling everywhere (for example, `benchmarkCPUGeekbench`, not `benchmarkCpuGeekbench` or `benchmarkCpuGeekBench`).
 - Shell:
   - Prefer POSIX‑compatible shell where practical; use Bash features when they materially simplify the code and are available in the target environment.
   - Functions and local variables should use lowerCamelCase or lower_snake_case consistently within a file; pick one per file and stick to it.
