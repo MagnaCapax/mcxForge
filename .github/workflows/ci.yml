@@ -22,7 +22,7 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl shellcheck shfmt
+          sudo apt-get install -y curl shellcheck shfmt socat
 
       - name: Install Composer deps (dev)
         run: |
