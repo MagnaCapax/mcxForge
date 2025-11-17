@@ -32,7 +32,45 @@ SUMMARY="$OUTDIR/run-summary.txt"
 JOBLOG="$OUTDIR/job.log"
 PROMPT="$OUTDIR/prompt.txt"
 
-DEFAULT_PROMPT=$'# mcxForge CI context\n#\n# You are helping review and debug mcxForge (a bare-metal rescue and diagnostics toolkit).\n# Use the CI summary and job logs as primary context, along with AGENTS.md and docs/.\n#\n# Goals:\n#  - Understand failing tests or lints.\n#  - Propose minimal, safe fixes consistent with mcxForge rails.\n#  - Keep interfaces stable and destructive operations guarded.\n'
+DEFAULT_PROMPT=$(
+  cat <<'MCXFORGEPROMPT'
+mcxForge CI Assist — Strict Rails Mode
+
+Goal: Make required CI jobs pass with the smallest coherent change, while keeping mcxForge’s safety rails intact.
+
+Read First (do not proceed until read):
+- AGENTS.md (rails / Constitution / safety doctrine).
+- docs/architecture.md (what mcxForge is and is not; layout and boundaries).
+- docs/tests.md and docs/ci-cd.md (testing / CI expectations, non-destructive defaults).
+- docs/adr/* (when present, governing decisions for the area you touch).
+
+Must Follow:
+- Safe-by-default: no destructive operations (wiping, repartitioning, RAID reconfiguration, firmware changes) without explicit flags and guardrails. CI and dev tests must never perform destructive actions.
+- KISS / DRY / YAGNI: keep implementations small and boring; reuse existing helpers; avoid clever abstractions and features that are not driven by a concrete use-case.
+- Minimal edits & one flow: keep diffs tight and focused; avoid adding new flows or modes unless required by an ADR; prefer improving or deleting existing code.
+- Language & dependencies: Bash for orchestration, PHP for more complex workflows; do not add new runtimes or heavy system dependencies without an ADR.
+- Interfaces & naming: keep CLI entrypoints and flags stable; use long, kebab-case flags; do not add aliases; follow context-first naming and existing terminology.
+- Observability: emit concise, structured output suitable for humans and log scraping; keep logs readable and avoid noisy debug spam.
+
+Absolutes:
+- Do not add destructive behaviour to CI or test helpers.
+- Do not introduce environment-specific hacks that break use under /opt/mcxForge on live rescue systems.
+- Keep operations idempotent and safe to re-run after partial completion.
+- Never create git branches from this helper; work on the existing branch only.
+- After applying a fix, stage and commit with a clear, focused message (no push).
+
+Workflow (do this now):
+- Triage the first failing required CI job/step using the CI summary and job logs listed below.
+- Form a hypothesis for the failure and propose the smallest coherent fix consistent with the rails above.
+- Implement the fix and verify locally, for example:
+  * php -l on each changed PHP file.
+  * php development/tests/development/runner.php
+  * bash development/testing/test.sh
+- Describe what you changed and why, and list the verification commands you ran.
+
+Proceed to triage the CI summary, job logs, and any artifacts. Propose a minimal patch and the commands needed to validate it.
+MCXFORGEPROMPT
+)
 
 wait_secs="${MCXFORGE_CI_WAIT_SECS:-300}"
 
@@ -211,4 +249,3 @@ else
 fi
 
 echo "[ci-codex] done" >&1
-
