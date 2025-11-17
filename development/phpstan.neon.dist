@@ -3,6 +3,8 @@ parameters:
   paths:
     - bin
     - lib
+  bootstrapFiles:
+    - %currentWorkingDirectory%/development/vendor/autoload.php
   excludePaths:
     analyse:
       - %currentWorkingDirectory%/vendor
