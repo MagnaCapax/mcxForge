@@ -17,10 +17,10 @@ echo "[ci-codex] start: assembling CI context and invoking assistant" >&1
 # ci-codex.sh — Fetch latest CI logs and feed them to a coding assistant.
 #
 # Usage:
-#   scripts/cli/ci-codex.sh                          # assemble prompt + logs into ci-codex/prompt.txt
-#   scripts/cli/ci-codex.sh --job test               # include only 'test' job logs in the prompt
-#   scripts/cli/ci-codex.sh --prompt "text..."       # use custom high-level prompt text
-#   scripts/cli/ci-codex.sh --exec 'codex'           # send prompt to Codex CLI directly
+#   development/cli/ci-codex.sh                          # assemble prompt + logs into ci-codex/prompt.txt
+#   development/cli/ci-codex.sh --job test               # include only 'test' job logs in the prompt
+#   development/cli/ci-codex.sh --prompt "text..."       # use custom high-level prompt text
+#   development/cli/ci-codex.sh --exec 'codex'           # send prompt to Codex CLI directly
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"

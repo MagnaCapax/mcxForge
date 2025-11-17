@@ -44,5 +44,5 @@ The helper expects:
 
 ## CI Workflow
 
-- See `.github/workflows/ci.yml`. It sets up PHP 8.2, installs dev dependencies via Composer (including PHPStan), and runs `scripts/testing/test.sh`.
-- Logs and artifacts from the `test` job can be consumed by `scripts/cli/ci-codex.sh` to assemble a context-rich prompt for agentic workflows.
+- See `.github/workflows/ci.yml`. It sets up PHP 8.2, installs dev dependencies via Composer (including PHPStan), and runs `development/testing/test.sh`.
+- Logs and artifacts from the `test` job can be consumed by `development/cli/ci-codex.sh` to assemble a context-rich prompt for agentic workflows.

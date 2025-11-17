@@ -29,7 +29,7 @@ This will:
 Verbose logs can be enabled via:
 
 ```sh
-TEST_VERBOSE=1 scripts/testing/test.sh
+TEST_VERBOSE=1 development/testing/test.sh
 ```
 
 ## Direction
