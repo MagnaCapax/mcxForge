@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace mcxForge\Tests;
 
-require_once __DIR__ . '/../../../bin/benchmarkGeekbench.php';
+require_once __DIR__ . '/../../../bin/benchmarkCpuGeekbench.php';
 require_once __DIR__ . '/../../../lib/php/Benchmark/GeekbenchRunner.php';
 
 use mcxForge\Benchmark\GeekbenchRunner;
 
-final class benchmarkGeekbenchArgsTest extends testCase
+final class benchmarkCpuGeekbenchArgsTest extends testCase
 {
     public function testDefaultArguments(): void
     {
@@ -61,4 +61,3 @@ final class benchmarkGeekbenchArgsTest extends testCase
         $this->assertTrue($v6 !== $v5);
     }
 }
-
