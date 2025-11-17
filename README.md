@@ -1,6 +1,6 @@
 # mcxForge
 
-mcxForge is a free and open source toolkit for bare‑metal hardware discovery, qualification, benchmarking, and rescue operations. It is developed by Magna Capax Finland Oy (Pulsed Media) and licensed under the GNU General Public License, version 3 (GPL‑3.0).
+mcxForge is a free and open source toolkit for bare‑metal hardware discovery, qualification, benchmarking, and rescue operations. It is developed by Magna Capax Finland Oy (Pulsed Media) and licensed under the MIT License.
 
 The primary deployment target is the `mcxRescue` live system, where mcxForge is fetched into `/opt/mcxForge` and used to exercise and prepare MiniDedi (MD) hardware before it enters production. The same tools are intended to work on other Linux systems as well, so power users can run the qualification and diagnostics suite on their own hardware.
 
@@ -49,6 +49,6 @@ Exact dependencies will be documented alongside specific tools as they are imple
 
 ## License
 
-This project is licensed under the GNU General Public License, version 3. See `LICENSE` for the full text.
+This project is licensed under the MIT License. See `LICENSE` for the full text.
 
 Copyright © Magna Capax Finland Oy.
