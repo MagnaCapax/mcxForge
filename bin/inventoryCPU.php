@@ -96,6 +96,9 @@ function collectCpuInventory(): array
     $topology = inventoryCPUReadTopology();
     $cache = inventoryCPUReadCacheInfo();
     $flags = inventoryCPUParseFlags($cpuinfo['flags'] ?? '');
+    $env = inventoryCPUDetectEnvironment($cpuinfo['flags'] ?? '');
+    $iommu = inventoryCPUDetectIommu();
+    $sriov = inventoryCPUDetectSriov();
 
     return [
         'vendor' => $cpuinfo['vendor_id'] ?? null,
@@ -121,6 +124,9 @@ function collectCpuInventory(): array
             'smep' => $flags['smep'],
             'smap' => $flags['smap'],
         ],
+        'environment' => $env,
+        'iommu' => $iommu,
+        'sriov' => $sriov,
     ];
 }
 
@@ -312,6 +318,137 @@ function inventoryCPUParseFlags(string $flags): array
         'smep' => isset($set['smep']),
         'smap' => isset($set['smap']),
     ];
+}
+
+/**
+ * @return array{isVirtualMachine:bool,hypervisorVendor:?string,role:string}
+ */
+function inventoryCPUDetectEnvironment(string $flags): array
+{
+    $parts = preg_split('/\s+/', trim($flags)) ?: [];
+    $flagSet = [];
+    foreach ($parts as $flag) {
+        if ($flag !== '') {
+            $flagSet[$flag] = true;
+        }
+    }
+
+    $isVm = isset($flagSet['hypervisor']);
+    $virtExt = null;
+    if (isset($flagSet['vmx'])) {
+        $virtExt = 'vmx';
+    } elseif (isset($flagSet['svm'])) {
+        $virtExt = 'svm';
+    }
+
+    $vendor = inventoryCPUDetectHypervisorVendor();
+
+    if ($isVm) {
+        $role = 'guest';
+    } elseif ($virtExt !== null) {
+        $role = 'host';
+    } else {
+        $role = 'baremetal';
+    }
+
+    return [
+        'isVirtualMachine' => $isVm,
+        'hypervisorVendor' => $vendor,
+        'role' => $role,
+    ];
+}
+
+function inventoryCPUDetectHypervisorVendor(): ?string
+{
+    $candidates = [
+        '/sys/class/dmi/id/product_name',
+        '/sys/class/dmi/id/sys_vendor',
+        '/sys/devices/virtual/dmi/id/product_name',
+        '/sys/devices/virtual/dmi/id/sys_vendor',
+    ];
+
+    $patterns = [
+        'KVM' => 'kvm',
+        'QEMU' => 'qemu',
+        'VMware' => 'vmware',
+        'VirtualBox' => 'virtualbox',
+        'Microsoft' => 'hyper-v',
+        'Hyper-V' => 'hyper-v',
+        'Xen' => 'xen',
+    ];
+
+    foreach ($candidates as $path) {
+        if (!is_readable($path)) {
+            continue;
+        }
+        $value = trim((string) file_get_contents($path));
+        if ($value === '') {
+            continue;
+        }
+        foreach ($patterns as $needle => $vendor) {
+            if (stripos($value, $needle) !== false) {
+                return $vendor;
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * @return array{enabled:bool,groupCount:int}
+ */
+function inventoryCPUDetectIommu(): array
+{
+    $base = '/sys/kernel/iommu_groups';
+    if (!is_dir($base)) {
+        return ['enabled' => false, 'groupCount' => 0];
+    }
+
+    $groups = glob($base . '/group*', GLOB_NOSORT) ?: [];
+    $count = 0;
+    foreach ($groups as $groupDir) {
+        if (!is_dir($groupDir)) {
+            continue;
+        }
+        $devicesDir = $groupDir . '/devices';
+        if (is_dir($devicesDir)) {
+            $entries = glob($devicesDir . '/*', GLOB_NOSORT) ?: [];
+            if (count($entries) > 0) {
+                $count++;
+            }
+        }
+    }
+
+    $enabled = $count > 0;
+
+    return [
+        'enabled' => $enabled,
+        'groupCount' => $count,
+    ];
+}
+
+/**
+ * @return array{hasSriovCapableDevices:bool}
+ */
+function inventoryCPUDetectSriov(): array
+{
+    $paths = glob('/sys/bus/pci/devices/*/sriov_totalvfs', GLOB_NOSORT) ?: [];
+
+    foreach ($paths as $path) {
+        if (!is_readable($path)) {
+            continue;
+        }
+        $raw = trim((string) file_get_contents($path));
+        if ($raw === '' || !ctype_digit($raw)) {
+            continue;
+        }
+        if ((int) $raw > 0) {
+            return ['hasSriovCapableDevices' => true];
+        }
+    }
+
+    return ['hasSriovCapableDevices' => false];
 }
 
 /**
@@ -531,4 +668,3 @@ TEXT;
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit(inventoryCPUMain($argv));
 }
-
