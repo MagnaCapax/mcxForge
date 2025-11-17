@@ -23,13 +23,12 @@ optional_tool() {
 
 # Required for all tests
 require_tool php
+require_tool curl
 
 # Optional tools used by some flows
-optional_tool curl || true
 optional_tool socat || true
 optional_tool composer || true
 optional_tool shellcheck || true
 optional_tool shfmt || true
 
 exit 0
-
