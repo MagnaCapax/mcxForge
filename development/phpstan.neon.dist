@@ -2,10 +2,10 @@ parameters:
   level: 1
   paths:
     - bin
+    - lib
   excludePaths:
     analyse:
       - %currentWorkingDirectory%/vendor
       - %currentWorkingDirectory%/tests
       - %currentWorkingDirectory%/scripts
       - %currentWorkingDirectory%/.github
-

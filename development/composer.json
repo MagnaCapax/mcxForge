@@ -10,6 +10,7 @@
   },
   "autoload": {
     "psr-4": {
+      "mcxForge\\Benchmark\\": "lib/php/Benchmark/"
     }
   },
   "config": {
@@ -18,4 +19,3 @@
     "preferred-install": "dist"
   }
 }
-
