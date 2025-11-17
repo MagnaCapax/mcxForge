@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+DEV_DIR="$ROOT_DIR/development"
 
 count_find() {
   local desc="$1"; shift
@@ -24,10 +25,10 @@ echo "---------------------------------"
 count_find "Bin PHP" "$ROOT_DIR/bin" -type f -name '*.php'
 
 # Tests PHP
-count_find "Tests PHP" "$ROOT_DIR/tests" -type f -name '*.php'
+count_find "Tests PHP" "$DEV_DIR/tests" -type f -name '*.php'
 
-# Bash scripts
-count_find "Bash scripts" "$ROOT_DIR/scripts" -type f -name '*.sh'
+# Bash scripts (development)
+count_find "Bash scripts" "$DEV_DIR" -type f -name '*.sh'
 
 # ADR markdown
 count_find "Docs ADR" "$ROOT_DIR/docs/adr" -type f -name '*.md'
@@ -36,4 +37,3 @@ count_find "Docs ADR" "$ROOT_DIR/docs/adr" -type f -name '*.md'
 count_find "Docs other" "$ROOT_DIR/docs" -type f -name '*.md' ! -path "$ROOT_DIR/docs/adr/*"
 
 echo "---------------------------------"
-

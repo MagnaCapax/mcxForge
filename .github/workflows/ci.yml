@@ -26,12 +26,11 @@ jobs:
 
       - name: Install Composer deps (dev)
         run: |
-          composer install --no-interaction --no-progress --prefer-dist
+          composer install --no-interaction --no-progress --prefer-dist --working-dir ./development
 
       - name: Run test suite
         env:
           TEST_VERBOSE: '0'
           PHPSTAN_DISABLE_PARALLEL: '1'
         run: |
-          bash scripts/testing/test.sh
-
+          bash development/testing/test.sh

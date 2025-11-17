@@ -2,8 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-BIN="$ROOT_DIR/vendor/bin/phpstan"
-CONF="$ROOT_DIR/phpstan.neon.dist"
+DEV_DIR="$ROOT_DIR/development"
+BIN="$DEV_DIR/vendor/bin/phpstan"
+CONF="$DEV_DIR/phpstan.neon.dist"
 PHP_BIN="${PHP_BIN:-php}"
 PHP_INI_ARGS=()
 EXTRA_ARGS=()
@@ -19,13 +20,13 @@ fi
 
 if [[ ! -x "$BIN" ]]; then
   if command -v composer >/dev/null 2>&1; then
-    echo "phpstan not found; attempting composer install (dev)" >&2
+    echo "phpstan not found; attempting composer install (dev, development/)" >&2
     set +e
-    composer install --no-interaction --no-progress --prefer-dist
+    composer install --no-interaction --no-progress --prefer-dist --working-dir "$DEV_DIR"
     rc=$?
     set -e
     if [[ $rc -ne 0 || ! -x "$BIN" ]]; then
-      echo "phpstan unavailable after composer install" >&2
+      echo "phpstan unavailable after composer install in development/" >&2
       if [[ "${ALLOW_TOOL_SKIP:-0}" == "1" ]]; then
         echo "Skipping phpstan due to ALLOW_TOOL_SKIP=1" >&2
         exit 0
@@ -43,5 +44,4 @@ if [[ ! -x "$BIN" ]]; then
   fi
 fi
 
-exec "$PHP_BIN" "${PHP_INI_ARGS[@]}" "$BIN" analyse -c "$CONF" bin "${EXTRA_ARGS[@]}"
-
+exec "$PHP_BIN" "${PHP_INI_ARGS[@]}" "$BIN" analyse -c "$CONF" "$ROOT_DIR/bin" "${EXTRA_ARGS[@]}"

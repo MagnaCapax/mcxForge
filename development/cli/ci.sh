@@ -12,10 +12,10 @@ echo "[ci] starting CI prompt assembly…" >&1
 #  - If --exec is provided, pipes to your assistant CLI
 #
 # Usage:
-#  scripts/cli/ci.sh                 # build prompt; prints location
-#  scripts/cli/ci.sh --exec 'codex chat --input -'
-#  scripts/cli/ci.sh --job test      # include specific job logs
-#  scripts/cli/ci.sh --prompt "..."  # custom prompt
+#  development/cli/ci.sh                 # build prompt; prints location
+#  development/cli/ci.sh --exec 'codex chat --input -'
+#  development/cli/ci.sh --job test      # include specific job logs
+#  development/cli/ci.sh --prompt "..."  # custom prompt
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
@@ -56,9 +56,8 @@ args=()
 [[ -n "$exec_cmd" ]] && args+=(--exec "$exec_cmd")
 
 set +e
-bash "$ROOT/scripts/cli/ci-codex.sh" "${args[@]}"
+bash "$ROOT/development/cli/ci-codex.sh" "${args[@]}"
 rc=$?
 set -e
 echo "[ci] ci-codex.sh exited with rc=$rc" >&1
 exit $rc
-

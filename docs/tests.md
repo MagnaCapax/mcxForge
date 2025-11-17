@@ -1,22 +1,22 @@
 # Testing Overview
 
-Current automated checks live under `scripts/testing/` so local runs and CI use the same entrypoints.
+Current automated checks live under `development/testing/` so local runs and CI use the same entrypoints.
 
 ## Available Scripts
-- `scripts/testing/test.sh` – orchestrates tool checks, PHP lint, storage parser tests, shell lint, static analysis, and a LOC snapshot.
-- `scripts/testing/php-lint.sh` – wraps `php -l` over the repository.
-- `scripts/testing/shell-lint.sh` – runs `bash -n` and `shellcheck` over `*.sh` scripts when available.
-- `scripts/testing/phpstan.sh` – runs PHPStan (honours `PHPSTAN_DISABLE_PARALLEL=1`).
-- `scripts/testing/loc.sh` – prints a LOC breakdown (bin PHP, tests, Bash, docs).
+- `development/testing/test.sh` – orchestrates tool checks, PHP lint, storage parser tests, shell lint, static analysis, and a LOC snapshot.
+- `development/testing/php-lint.sh` – wraps `php -l` over the repository.
+- `development/testing/shell-lint.sh` – runs `bash -n` and `shellcheck` over `*.sh` scripts when available.
+- `development/testing/phpstan.sh` – runs PHPStan (honours `PHPSTAN_DISABLE_PARALLEL=1`).
+- `development/testing/loc.sh` – prints a LOC breakdown (bin PHP, tests, Bash, docs).
 
 Storage-specific tests live under `tests/development/` and use a small in-tree harness.
 
 ## Running locally
 
-Requirements: PHP 8.x.
+Requirements: PHP 8.x and basic shell tools.
 
 ```sh
-scripts/testing/test.sh
+development/testing/test.sh
 ```
 
 This will:
@@ -34,6 +34,5 @@ TEST_VERBOSE=1 scripts/testing/test.sh
 
 ## Direction
 
-- As mcxForge grows, additional tests (for new entrypoints and libraries) should be added under `tests/` and wired into `scripts/testing/test.sh`.
+- As mcxForge grows, additional tests (for new entrypoints and libraries) should be added under `development/tests/` and wired into `development/testing/test.sh`.
 - More opinionated checks (docblock/ADR metadata, naming conventions, etc.) can be introduced here once the repository structure stabilizes.
-

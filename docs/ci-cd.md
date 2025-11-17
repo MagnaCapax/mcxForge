@@ -1,12 +1,12 @@
 # CI/CD and Agentic Test Flow
 
-This repository keeps its testing suite in-tree so local runs and CI share the same entrypoints. CI invokes the same scripts you use locally.
+This repository keeps its testing suite in-tree so local runs and CI share the same entrypoints. CI invokes the same scripts you use locally, under the `development/` tree so the repository root stays clean for on-host use.
 
 ## Overview
 
-- Orchestrator: `scripts/testing/test.sh` – tool checks → PHP lint → storage parser tests → shell lint → static analysis (PHPStan) → LOC snapshot.
-- CI: `.github/workflows/ci.yml` runs `scripts/testing/test.sh` on push/PR.
-- Optional assistant integration: `scripts/cli/ci.sh` and `scripts/cli/ci-codex.sh` can assemble CI context and prompt text for a coding assistant.
+- Orchestrator: `development/testing/test.sh` – tool checks → PHP lint → storage parser tests → shell lint → static analysis (PHPStan) → LOC snapshot.
+- CI: `.github/workflows/ci.yml` runs `development/testing/test.sh` on push/PR.
+- Optional assistant integration: `development/cli/ci.sh` and `development/cli/ci-codex.sh` can assemble CI context and prompt text for a coding assistant.
 
 ## Local Requirements
 
@@ -15,10 +15,10 @@ This repository keeps its testing suite in-tree so local runs and CI share the s
 
 ## Running Locally
 
-Run the full suite:
+Run the full suite from the repository root:
 
 ```sh
-scripts/testing/test.sh
+development/testing/test.sh
 ```
 
 This mirrors what GitHub Actions runs in `.github/workflows/ci.yml`.
@@ -28,7 +28,7 @@ This mirrors what GitHub Actions runs in `.github/workflows/ci.yml`.
 To pull the latest CI logs and build a prompt for an assistant:
 
 ```sh
-scripts/cli/ci.sh
+development/cli/ci.sh
 ```
 
 Options:
@@ -46,4 +46,3 @@ The helper expects:
 
 - See `.github/workflows/ci.yml`. It sets up PHP 8.2, installs dev dependencies via Composer (including PHPStan), and runs `scripts/testing/test.sh`.
 - Logs and artifacts from the `test` job can be consumed by `scripts/cli/ci-codex.sh` to assemble a context-rich prompt for agentic workflows.
-

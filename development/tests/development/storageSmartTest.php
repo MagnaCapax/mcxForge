@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace mcxForge\Tests;
 
-require_once __DIR__ . '/../../bin/storageTestSmart.php';
+require_once __DIR__ . '/../../../bin/storageTestSmart.php';
 
 final class storageSmartTest extends testCase
 {

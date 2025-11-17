@@ -1,7 +1,7 @@
-# Dependencies
-/vendor/
-/composer.phar
-/composer.lock
+# Dependencies (development tree)
+/development/vendor/
+/development/composer.phar
+/development/composer.lock
 
 # Environment & local overrides
 .env
@@ -28,5 +28,4 @@ dist/
 build/
 tmp/
 *.log
-var/
-
+/development/var/

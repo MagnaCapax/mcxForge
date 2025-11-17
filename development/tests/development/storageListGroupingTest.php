@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace mcxForge\Tests;
 
-require_once __DIR__ . '/../../bin/storageList.php';
+require_once __DIR__ . '/../../../bin/storageList.php';
 
 final class storageListGroupingTest extends testCase
 {
@@ -128,4 +128,3 @@ final class storageListGroupingTest extends testCase
         $this->assertEquals('UNKNOWN', $groups['SATA'][1]['model']);
     }
 }
-

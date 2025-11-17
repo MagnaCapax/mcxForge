@@ -25,9 +25,13 @@
 - `docs/`:
   - This architecture overview and any additional runbooks or guides.
   - `docs/adr/`: Architecture Decision Records that define the rules, boundaries, and key design choices.
-- `tests/` (planned):
-  - Non‑destructive verification of parsing, orchestration, and reporting behavior.
-  - Destructive tests must be opt‑in and clearly separated from default test runs.
+- `development/`:
+  - In-tree development and CI helpers that should not be required on live hosts.
+  - `development/testing/`: Test and lint orchestration scripts (shell, PHPStan, LOC).
+  - `development/tests/`: Non‑destructive verification of parsing, orchestration, and reporting behavior.
+    - Destructive tests must be opt‑in and clearly separated from default test runs.
+  - `development/cli/`: CI/assistant helpers (for example, assembling CI logs for an agent).
+  - `development/vendor/`, `development/var/`: Dev-only dependencies and artifacts (ignored in version control).
 
 See ADR‑0001 for the initial scope and layout decision.
 
@@ -60,4 +64,3 @@ Exact commands, profiles, and report formats will be documented alongside the to
   - Business logic such as customer lifecycle or billing.
 
 Keep new features within this boundary. If a proposed change starts to look like a full configuration management or control plane system, it likely belongs elsewhere.
-

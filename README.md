@@ -65,15 +65,15 @@ Exact dependencies will be documented alongside specific tools as they are imple
 ## Development & Testing (early outline)
 
 - All repository rails and safety expectations are defined in `AGENTS.md`.
-- Tests and lint orchestration live under `scripts/testing/`, with a single entrypoint:
+- Tests and lint orchestration live under `development/testing/`, with a single entrypoint:
 
   ```sh
-  scripts/testing/test.sh
+  development/testing/test.sh
   ```
 
-  This runs PHP lint, storage parser tests under `tests/`, shell lint for `*.sh`, static analysis with PHPStan, and a small LOC snapshot.
+  This runs PHP lint, storage parser tests under `development/tests/`, shell lint for `*.sh`, static analysis with PHPStan, and a small LOC snapshot.
 
-GitHub Actions CI runs the same `scripts/testing/test.sh` workflow on pushes and pull requests to keep local and CI behavior aligned.
+GitHub Actions CI runs the same `development/testing/test.sh` workflow on pushes and pull requests to keep local and CI behavior aligned, while keeping the repository root focused on on-host tools.
 
 ## License
 

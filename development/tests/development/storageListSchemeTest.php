@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace mcxForge\Tests;
 
-require_once __DIR__ . '/../../bin/storageList.php';
+require_once __DIR__ . '/../../../bin/storageList.php';
 
 final class storageListSchemeTest extends testCase
 {
@@ -74,4 +74,3 @@ final class storageListSchemeTest extends testCase
         $this->assertEquals('RAID', $scheme);
     }
 }
-
