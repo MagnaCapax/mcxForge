@@ -99,6 +99,7 @@ function collectCpuInventory(): array
     $env = inventoryCPUDetectEnvironment($cpuinfo['flags'] ?? '');
     $iommu = inventoryCPUDetectIommu();
     $sriov = inventoryCPUDetectSriov();
+    $power = inventoryCPUReadPowerInfo();
 
     return [
         'vendor' => $cpuinfo['vendor_id'] ?? null,
@@ -127,6 +128,7 @@ function collectCpuInventory(): array
         'environment' => $env,
         'iommu' => $iommu,
         'sriov' => $sriov,
+        'power' => $power,
     ];
 }
 
@@ -452,6 +454,85 @@ function inventoryCPUDetectSriov(): array
 }
 
 /**
+ * Opportunistic cpufreq / powercap info. This is best‑effort and may return nulls
+ * on systems where the relevant sysfs interfaces are not present.
+ *
+ * @return array{cpufreq:array{minimumMhz:?float,maximumMhz:?float,governors:array<int,string>},powerCap:array{primaryPackageLimitWatts:?float}}
+ */
+function inventoryCPUReadPowerInfo(): array
+{
+    $minMhz = null;
+    $maxMhz = null;
+    $governors = [];
+
+    $cpuDirs = glob('/sys/devices/system/cpu/cpu[0-9]*', GLOB_NOSORT) ?: [];
+    foreach ($cpuDirs as $dir) {
+        $cpufreqDir = $dir . '/cpufreq';
+        if (!is_dir($cpufreqDir)) {
+            continue;
+        }
+
+        $minPath = $cpufreqDir . '/scaling_min_freq';
+        $maxPath = $cpufreqDir . '/scaling_max_freq';
+        $govPath = $cpufreqDir . '/scaling_governor';
+
+        if (is_readable($minPath)) {
+            $raw = trim((string) file_get_contents($minPath));
+            if ($raw !== '' && ctype_digit($raw)) {
+                $mhz = ((float) $raw) / 1000.0;
+                $minMhz = $minMhz === null ? $mhz : min($minMhz, $mhz);
+            }
+        }
+        if (is_readable($maxPath)) {
+            $raw = trim((string) file_get_contents($maxPath));
+            if ($raw !== '' && ctype_digit($raw)) {
+                $mhz = ((float) $raw) / 1000.0;
+                $maxMhz = $maxMhz === null ? $mhz : max($maxMhz, $mhz);
+            }
+        }
+        if (is_readable($govPath)) {
+            $gov = trim((string) file_get_contents($govPath));
+            if ($gov !== '') {
+                $governors[$gov] = true;
+            }
+        }
+    }
+
+    $cpufreq = [
+        'minimumMhz' => $minMhz,
+        'maximumMhz' => $maxMhz,
+        'governors' => array_values(array_keys($governors)),
+    ];
+
+    $primaryLimit = null;
+    $capDirs = glob('/sys/class/powercap/*', GLOB_NOSORT) ?: [];
+    foreach ($capDirs as $dir) {
+        if (!is_dir($dir)) {
+            continue;
+        }
+        $limitPath = $dir . '/constraint_0_power_limit_uw';
+        if (!is_readable($limitPath)) {
+            continue;
+        }
+        $raw = trim((string) file_get_contents($limitPath));
+        if ($raw === '' || !ctype_digit($raw)) {
+            continue;
+        }
+        $primaryLimit = ((float) $raw) / 1000000.0;
+        break;
+    }
+
+    $powerCap = [
+        'primaryPackageLimitWatts' => $primaryLimit,
+    ];
+
+    return [
+        'cpufreq' => $cpufreq,
+        'powerCap' => $powerCap,
+    ];
+}
+
+/**
  * @param array<string,mixed> $info
  */
 function inventoryCPURenderHuman(array $info, bool $colorEnabled): void
@@ -621,6 +702,53 @@ function inventoryCPURenderHuman(array $info, bool $colorEnabled): void
             $resetColor
         );
     }
+
+    echo PHP_EOL;
+    echo $sectionColor . "Power" . $resetColor . PHP_EOL;
+    /** @var array<string,mixed> $power */
+    $power = $info['power'] ?? ['cpufreq' => null, 'powerCap' => null];
+    /** @var array<string,mixed>|null $cpufreq */
+    $cpufreq = $power['cpufreq'] ?? null;
+    /** @var array<string,mixed>|null $powerCap */
+    $powerCap = $power['powerCap'] ?? null;
+
+    $minMhz = $cpufreq['minimumMhz'] ?? null;
+    $maxMhz = $cpufreq['maximumMhz'] ?? null;
+    $govs = $cpufreq['governors'] ?? [];
+
+    echo sprintf(
+        "  %sMin/Max frequency (cpufreq):%s %s%s / %s MHz%s\n",
+        $labelColor,
+        $resetColor,
+        $valueColor,
+        $minMhz !== null ? (string) $minMhz : 'N/A',
+        $maxMhz !== null ? (string) $maxMhz : 'N/A',
+        $resetColor
+    );
+
+    $govText = 'none';
+    if (is_array($govs) && count($govs) > 0) {
+        $govText = implode(', ', $govs);
+    }
+
+    echo sprintf(
+        "  %sGovernors:%s %s%s%s\n",
+        $labelColor,
+        $resetColor,
+        $valueColor,
+        $govText,
+        $resetColor
+    );
+
+    $pkgLimit = $powerCap['primaryPackageLimitWatts'] ?? null;
+    echo sprintf(
+        "  %sPrimary package power limit:%s %s%s%s\n",
+        $labelColor,
+        $resetColor,
+        $valueColor,
+        $pkgLimit !== null ? (string) $pkgLimit . ' W' : 'N/A',
+        $resetColor
+    );
 }
 
 /**

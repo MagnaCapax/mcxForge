@@ -118,4 +118,26 @@ final class inventoryCPUCollectorTest extends testCase
             $this->assertTrue(is_bool($features[$name]), "feature {$name} should be boolean");
         }
     }
+
+    public function testPowerBlockHasExpectedKeys(): void
+    {
+        $info = \collectCpuInventory();
+
+        $this->assertTrue(isset($info['power']));
+        /** @var array<string,mixed> $power */
+        $power = $info['power'];
+        $this->assertTrue(array_key_exists('cpufreq', $power));
+        $this->assertTrue(array_key_exists('powerCap', $power));
+
+        /** @var array<string,mixed> $cpufreq */
+        $cpufreq = $power['cpufreq'];
+        $this->assertTrue(array_key_exists('minimumMhz', $cpufreq));
+        $this->assertTrue(array_key_exists('maximumMhz', $cpufreq));
+        $this->assertTrue(array_key_exists('governors', $cpufreq));
+        $this->assertTrue(is_array($cpufreq['governors']));
+
+        /** @var array<string,mixed> $powerCap */
+        $powerCap = $power['powerCap'];
+        $this->assertTrue(array_key_exists('primaryPackageLimitWatts', $powerCap));
+    }
 }

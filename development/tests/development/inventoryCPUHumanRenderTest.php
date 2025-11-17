@@ -54,6 +54,16 @@ final class inventoryCPUHumanRenderTest extends testCase
             'sriov' => [
                 'hasSriovCapableDevices' => true,
             ],
+            'power' => [
+                'cpufreq' => [
+                    'minimumMhz' => 1600.0,
+                    'maximumMhz' => 4200.0,
+                    'governors' => ['performance'],
+                ],
+                'powerCap' => [
+                    'primaryPackageLimitWatts' => 125.0,
+                ],
+            ],
         ];
     }
 
@@ -100,5 +110,17 @@ final class inventoryCPUHumanRenderTest extends testCase
         $this->assertTrue(strpos($out, 'L1d: N/A') !== false);
         $this->assertTrue(strpos($out, 'L3: N/A') !== false);
     }
-}
 
+    public function testHumanRenderIncludesPowerSection(): void
+    {
+        $info = $this->minimalInfo();
+
+        ob_start();
+        \inventoryCPURenderHuman($info, false);
+        $out = (string) ob_get_clean();
+
+        $this->assertTrue(strpos($out, 'Power') !== false);
+        $this->assertTrue(strpos($out, 'Min/Max frequency (cpufreq)') !== false);
+        $this->assertTrue(strpos($out, 'Primary package power limit') !== false);
+    }
+}
