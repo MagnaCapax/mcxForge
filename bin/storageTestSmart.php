@@ -14,10 +14,14 @@ declare(strict_types=1);
  * SMART self-tests and reads their status.
  */
 
-const EXIT_OK = 0;
-const EXIT_ERROR = 1;
+if (!defined('EXIT_OK')) {
+    define('EXIT_OK', 0);
+}
+if (!defined('EXIT_ERROR')) {
+    define('EXIT_ERROR', 1);
+}
 
-function main(array $argv): int
+function storageTestSmartMain(array $argv): int
 {
     [$testType, $resultsOnly] = parseSmartArguments($argv);
 
@@ -337,5 +341,6 @@ TEXT;
     echo $help;
 }
 
-exit(main($argv));
-
+if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
+    exit(storageTestSmartMain($argv));
+}

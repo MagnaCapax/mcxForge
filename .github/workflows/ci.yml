@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl shellcheck shfmt
+
+      - name: Install Composer deps (dev)
+        run: |
+          composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run test suite
+        env:
+          TEST_VERBOSE: '0'
+          PHPSTAN_DISABLE_PARALLEL: '1'
+        run: |
+          bash scripts/testing/test.sh
+

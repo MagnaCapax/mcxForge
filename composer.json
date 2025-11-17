@@ -1,0 +1,21 @@
+{
+  "name": "mcx/mcxforge",
+  "type": "project",
+  "description": "mcxForge toolkit for bare-metal discovery, qualification, and rescue operations.",
+  "license": "Apache-2.0",
+  "require": {
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.11"
+  },
+  "autoload": {
+    "psr-4": {
+    }
+  },
+  "config": {
+    "platform": { "php": "8.2.0" },
+    "sort-packages": true,
+    "preferred-install": "dist"
+  }
+}
+

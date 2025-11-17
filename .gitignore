@@ -1,0 +1,32 @@
+# Dependencies
+/vendor/
+/composer.phar
+/composer.lock
+
+# Environment & local overrides
+.env
+.env.*
+.codex
+
+# IDE/editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Caches & coverage
+.php-cs-fixer.cache
+.phpunit.result.cache
+coverage/
+.cache/
+
+# Build artifacts
+dist/
+build/
+tmp/
+*.log
+var/
+
