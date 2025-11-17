@@ -44,4 +44,4 @@ if [[ ! -x "$BIN" ]]; then
   fi
 fi
 
-exec "$PHP_BIN" "${PHP_INI_ARGS[@]}" "$BIN" analyse -c "$CONF" "$ROOT_DIR/bin" "${EXTRA_ARGS[@]}"
+exec "$PHP_BIN" "${PHP_INI_ARGS[@]}" "$BIN" analyse -c "$CONF" "$ROOT_DIR/bin" "$ROOT_DIR/lib" "${EXTRA_ARGS[@]}"
