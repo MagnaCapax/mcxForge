@@ -1,5 +1,7 @@
 # Repository Guidelines (mcxForge)
 
+These guidelines, and the surrounding agentic development framework used in this repository, were initially designed and assembled by Aleksi Ursin, with heavy use of OpenAI's Codex CLI for code generation and refactoring via natural-language prompting.
+
 ## Project Context
 - **Purpose**: mcxForge is a suite of command‑line tools and helpers installed under `/opt/mcxForge` on a live rescue system to qualify, identify, benchmark, and prepare bare‑metal hardware for production use.
 - **Audience**: Sysadmins on a live console and automation driven by higher‑level orchestration. Tools must be safe by default, scriptable, and usable under pressure.

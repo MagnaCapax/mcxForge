@@ -1,7 +1,10 @@
 # ADR-0001: mcxForge Scope and Layout
 
-## Status
-- Accepted
+## Metadata
+- Author: Aleksi Ursin (with Codex CLI assistance)
+- Status: Accepted
+
+> All future ADRs in this repository must include an `Author:` line in their metadata section naming the primary human author, even when agentic tools are heavily involved in drafting or implementation.
 
 ## Context
 mcxForge is intended to be a small, focused toolkit that runs inside an existing Linux environment (most commonly a live rescue system) to qualify, benchmark, and repair bare‑metal servers. It should not behave like a full overlay distribution or control plane, but it must still have clear boundaries, a stable directory layout, and consistent language/tooling choices.
@@ -34,4 +37,3 @@ Without explicit decisions, the repository could grow into an ad‑hoc collectio
 - The language policy keeps the runtime surface manageable and avoids accidental proliferation of stacks on rescue systems.
 
 Future ADRs should build on this decision when introducing new top‑level directories, changing the deployment path, or expanding the scope beyond a single host’s qualification and rescue operations.
-

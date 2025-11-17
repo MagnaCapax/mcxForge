@@ -33,6 +33,14 @@ Outside of `mcxRescue`, you can clone the repository on a supported Linux system
 
 Concrete commands and workflows will be expanded as the toolkit matures. See `AGENTS.md` for the repository’s engineering rules and safety expectations, and `docs/` for architecture notes and ADRs as they are added.
 
+## Authorship & Credits
+
+mcxForge is developed by Magna Capax Finland Oy (Pulsed Media).
+
+The initial architecture, AGENTS guidelines, ADRs, and early storage and benchmarking tools were designed and assembled by Aleksi Ursin, with heavy use of OpenAI's Codex CLI for code generation and refactoring under his direction.
+
+No traditional file editor was harmed in the making of the first versions of this toolkit; the initial codebase was built almost entirely via experience and natural-language prompting.
+
 ## Installation & Placement (early outline)
 
 Until packaging and install scripts are finalized, you can treat mcxForge as a source checkout:
