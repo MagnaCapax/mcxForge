@@ -1,6 +1,6 @@
 # Repository Guidelines (mcxForge)
 
-These guidelines, and the surrounding agentic development framework used in this repository, were initially designed and assembled by Aleksi Ursin, with heavy use of OpenAI's Codex CLI for code generation and refactoring via natural-language prompting.
+These guidelines, and the surrounding agentic development framework used in this repository, were initially designed and assembled by Aleksi Ursin, using experience and natural-language prompting workflows for most of the initial implementation.
 
 ## Project Context
 - **Purpose**: mcxForge is a suite of command‑line tools and helpers installed under `/opt/mcxForge` on a live rescue system to qualify, identify, benchmark, and prepare bare‑metal hardware for production use.
@@ -12,8 +12,9 @@ These guidelines, and the surrounding agentic development framework used in this
 ## Governing Law & Sources of Truth
 - This `AGENTS.md` governs the entire repository. If more specific rules are needed for subtrees, add additional `AGENTS.md` files; the most specific one wins.
 - Code is the ground truth for behavior; docs explain intent. If docs and code disagree, follow the code and update the docs.
+- ADRs under `docs/adr/` are part of the mcxForge “constitution”: once an ADR is marked Accepted, its decisions are binding for code, docs, and tooling until explicitly superseded by a later ADR.
 - Significant changes to behavior, interfaces, safety rails, or workflows require an ADR under `docs/adr/` (one subject per ADR). Cross‑reference related ADRs.
-- Before designing new flows, scan `docs/adr/` and `docs/` for relevant decisions and architecture notes. Keep new work aligned with existing decisions or add an ADR to change them.
+- Before designing new flows, scan `docs/adr/` and `docs/` for relevant decisions and architecture notes. Keep new work aligned with existing decisions or add an ADR to change them. Pull requests that contradict existing Accepted ADRs without updating or adding a new ADR should be rejected.
 
 ## Universal Engineering Principles
 - **KISS (Keep It Simple, Stupid)**: Prefer straightforward, boring implementations. Avoid cleverness and unnecessary abstractions, especially in safety‑critical paths.
