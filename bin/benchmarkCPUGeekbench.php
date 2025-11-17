@@ -187,7 +187,7 @@ function benchmarkGeekbenchParseArguments(array $argv): array
 function benchmarkGeekbenchPrintHelp(): void
 {
     $help = <<<TEXT
-Usage: benchmarkGeekbench.php [--version=5|6] [--score-only] [--no-color]
+Usage: benchmarkCPUGeekbench.php [--version=5|6] [--score-only] [--no-color]
 
 Download and run Geekbench 5 or 6, write results to a dated log file under /tmp,
 and print a final programmatic score line:

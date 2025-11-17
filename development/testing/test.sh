@@ -28,6 +28,9 @@ bash "$DEV_DIR/testing/shell-lint.sh" || echo "Shell lint skipped or failed (see
 echo "4) Static analysis (phpstan)"
 PHPSTAN_DISABLE_PARALLEL=1 bash "$DEV_DIR/testing/phpstan.sh" || echo "phpstan skipped or failed (see output above)"
 
+echo "5) ADR metadata checks"
+bash "$DEV_DIR/testing/adr-lint.sh"
+
 echo "All tests completed"
 
 echo

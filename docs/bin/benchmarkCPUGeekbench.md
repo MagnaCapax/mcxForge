@@ -24,8 +24,6 @@ Primary entrypoint:
 bin/benchmarkCPUGeekbench.php [--version=5|6] [--score-only] [--no-color]
 ```
 
-For backward compatibility, `bin/benchmarkGeekbench.php` is also available and forwards to the same implementation.
-
 ### Options
 
 - `--version=5`  

@@ -14,7 +14,7 @@ final class benchmarkCPUGeekbenchArgsTest extends testCase
     public function testDefaultArguments(): void
     {
         [$major, $scoreOnly, $colorEnabled] = \benchmarkGeekbenchParseArguments(
-            ['benchmarkGeekbench.php']
+            ['benchmarkCPUGeekbench.php']
         );
 
         $this->assertEquals('6', $major);
@@ -25,7 +25,7 @@ final class benchmarkCPUGeekbenchArgsTest extends testCase
     public function testVersionFiveArgument(): void
     {
         [$major] = \benchmarkGeekbenchParseArguments(
-            ['benchmarkGeekbench.php', '--version=5']
+            ['benchmarkCPUGeekbench.php', '--version=5']
         );
 
         $this->assertEquals('5', $major);
@@ -34,7 +34,7 @@ final class benchmarkCPUGeekbenchArgsTest extends testCase
     public function testScoreOnlyArgument(): void
     {
         [, $scoreOnly] = \benchmarkGeekbenchParseArguments(
-            ['benchmarkGeekbench.php', '--score-only']
+            ['benchmarkCPUGeekbench.php', '--score-only']
         );
 
         $this->assertTrue($scoreOnly === true);
@@ -43,7 +43,7 @@ final class benchmarkCPUGeekbenchArgsTest extends testCase
     public function testNoColorArgument(): void
     {
         [, , $colorEnabled] = \benchmarkGeekbenchParseArguments(
-            ['benchmarkGeekbench.php', '--no-color']
+            ['benchmarkCPUGeekbench.php', '--no-color']
         );
 
         $this->assertTrue($colorEnabled === false);

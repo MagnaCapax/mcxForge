@@ -8,6 +8,7 @@ Current automated checks live under `development/testing/` so local runs and CI 
 - `development/testing/shell-lint.sh` – runs `bash -n` and `shellcheck` over `*.sh` scripts when available.
 - `development/testing/phpstan.sh` – runs PHPStan (honours `PHPSTAN_DISABLE_PARALLEL=1`).
 - `development/testing/loc.sh` – prints a LOC breakdown (bin PHP, tests, Bash, docs).
+- `development/testing/adr-lint.sh` – verifies that each ADR under `docs/adr/` contains an `Author:` line in its metadata.
 
 Storage-specific tests live under `tests/development/` and use a small in-tree harness.
 
@@ -25,6 +26,7 @@ This will:
 - Run storage parser tests (e.g., SMART output parsing, scheme detection).
 - Run shell lint where `shellcheck` is available.
 - Run static analysis with PHPStan when installed (or via Composer dev deps).
+- Run ADR metadata checks to ensure all ADRs declare an `Author:` line.
 
 Verbose logs can be enabled via:
 
