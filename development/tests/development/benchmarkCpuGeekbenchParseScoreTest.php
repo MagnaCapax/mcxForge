@@ -88,4 +88,44 @@ final class benchmarkCpuGeekbenchParseScoreTest extends testCase
         $this->assertEquals('/tmp/benchmarkGeekbench5-20251117.log', $path5);
         $this->assertEquals('/tmp/benchmarkGeekbench6-20251117.log', $path6);
     }
+
+    public function testParseScoreIsCaseInsensitive(): void
+    {
+        $runner = new GeekbenchRunner();
+
+        $lines = [
+            'geekbench 6 output',
+            'single-core score           1111',
+            'multi-core score            2222',
+        ];
+
+        $score = $runner->parseScore($lines, '6');
+        $this->assertEquals(2222, $score);
+    }
+
+    public function testParseScoreUsesFirstMultiCoreLine(): void
+    {
+        $runner = new GeekbenchRunner();
+
+        $lines = [
+            'Multi-Core Score            3000',
+            'Some detail line',
+            'Multi-Core Score            9999',
+        ];
+
+        $score = $runner->parseScore($lines, '6');
+        $this->assertEquals(3000, $score);
+    }
+
+    public function testParseScoreHandlesTrailingText(): void
+    {
+        $runner = new GeekbenchRunner();
+
+        $lines = [
+            'Multi-Core Score            4444',
+        ];
+
+        $score = $runner->parseScore($lines, '6');
+        $this->assertEquals(4444, $score);
+    }
 }
