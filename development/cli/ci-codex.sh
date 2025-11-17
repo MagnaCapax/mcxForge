@@ -232,12 +232,15 @@ else
   echo "  codex \"\$(cat '$PROMPT')\"" >&1
 fi
 
-if [[ "${MCXFORGE_CI_AUTOCOMMIT:-0}" == "1" ]]; then
+# Auto-commit any changes created by the assistant (no branches, no push)
+MCXFORGE_CI_AUTOCOMMIT=${MCXFORGE_CI_AUTOCOMMIT:-1}
+if [[ "$MCXFORGE_CI_AUTOCOMMIT" == "1" ]]; then
   if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "[ci-codex] auto-commit: checking for changes" >&1
-    if ! git -C "$ROOT" diff --quiet; then
+    if [[ -n "$(git -C "$ROOT" status --porcelain)" ]]; then
       msg="ci-codex: apply assistant changes for run $run_id"
-      git -C "$ROOT" commit -am "$msg" && echo "[ci-codex] auto-commit: committed changes" >&1 || echo "[ci-codex] auto-commit: commit failed" >&1
+      git -C "$ROOT" add -A
+      git -C "$ROOT" commit -m "$msg" && echo "[ci-codex] auto-commit: committed changes" >&1 || echo "[ci-codex] auto-commit: commit failed" >&1
     else
       echo "[ci-codex] auto-commit: no changes to commit" >&1
     fi
