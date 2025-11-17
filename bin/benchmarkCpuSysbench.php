@@ -130,3 +130,73 @@ function benchmarkCpuSysbenchParseArguments(array $argv): array
         if ($arg === '--help' || $arg === '-h') {
             benchmarkCpuSysbenchPrintHelp();
             exit(EXIT_OK);
+        }
+
+        if ($arg === '--score-only') {
+            $scoreOnly = true;
+            continue;
+        }
+
+        if ($arg === '--no-color') {
+            $colorEnabled = false;
+            continue;
+        }
+
+        if (str_starts_with($arg, '--duration=')) {
+            $value = substr($arg, strlen('--duration='));
+            $value = trim($value);
+            if (!ctype_digit($value) || (int) $value <= 0) {
+                fwrite(STDERR, "Error: invalid --duration value '{$value}'\n");
+                exit(EXIT_ERROR);
+            }
+            $duration = (int) $value;
+            continue;
+        }
+
+        if (str_starts_with($arg, '--threads=')) {
+            $value = substr($arg, strlen('--threads='));
+            $value = trim($value);
+            if (!ctype_digit($value) || (int) $value <= 0) {
+                fwrite(STDERR, "Error: invalid --threads value '{$value}'\n");
+                exit(EXIT_ERROR);
+            }
+            $threads = (int) $value;
+            continue;
+        }
+
+        fwrite(STDERR, "Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        exit(EXIT_ERROR);
+    }
+
+    return [$duration, $threads, $scoreOnly, $colorEnabled];
+}
+
+function benchmarkCpuSysbenchPrintHelp(): void
+{
+    $help = <<<TEXT
+Usage: benchmarkCpuSysbench.php [--duration=SECONDS] [--threads=N] [--score-only] [--no-color]
+
+Run a CPU benchmark using sysbench cpu, log output under /tmp, and emit a normalized score:
+
+  {{SCORE:<events_per_second_per_thread>}}
+
+Options:
+  --duration=SECONDS  Run time for sysbench (default: 60).
+  --threads=N         Number of worker threads to use (default: detected logical cores).
+  --score-only        Print only the SCORE line, nothing else.
+  --no-color          Disable ANSI colors in human output.
+  -h, --help          Show this help message.
+
+Notes:
+  - Raw output is appended to /tmp/benchmarkCpuSysbench-YYYYMMDD.log.
+  - The score is normalized per thread to improve comparability across CPUs.
+
+TEXT;
+
+    echo $help;
+}
+
+if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
+    exit(benchmarkCpuSysbenchMain($argv));
+}
+
