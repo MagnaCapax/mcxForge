@@ -28,6 +28,16 @@ final class inventoryCPUFlagsTest extends testCase
         $this->assertTrue($parsed['avx2']);
     }
 
+    public function testParseFlagsPrefersVmxWhenBothPresent(): void
+    {
+        $flags = 'vmx svm avx2';
+        $parsed = \inventoryCPUParseFlags($flags);
+
+        // vmx wins when both are present
+        $this->assertEquals('vmx', $parsed['virtualization']);
+        $this->assertTrue($parsed['avx2']);
+    }
+
     public function testParseFlagsNoVirtualizationWhenFlagsMissing(): void
     {
         $flags = 'fpu sse4_2 aes';
@@ -65,5 +75,31 @@ final class inventoryCPUFlagsTest extends testCase
         $this->assertTrue($parsed['aes'] === false);
         $this->assertTrue($parsed['avx'] === false);
     }
-}
 
+    public function testParseFlagsTrimsWhitespace(): void
+    {
+        $flags = "  vmx   sse4_2   ";
+        $parsed = \inventoryCPUParseFlags($flags);
+
+        $this->assertEquals('vmx', $parsed['virtualization']);
+        $this->assertTrue($parsed['sse4_2']);
+    }
+
+    public function testParseFlagsTreatsDuplicateFlagsIdempotently(): void
+    {
+        $flags = 'vmx vmx vmx avx avx';
+        $parsed = \inventoryCPUParseFlags($flags);
+
+        $this->assertEquals('vmx', $parsed['virtualization']);
+        $this->assertTrue($parsed['avx']);
+    }
+
+    public function testParseFlagsWithHypervisorButNoVirtExtensions(): void
+    {
+        $flags = 'hypervisor';
+        $parsed = \inventoryCPUParseFlags($flags);
+
+        // Flags alone do not imply host virtualization, environment detection handles hypervisor
+        $this->assertTrue($parsed['virtualization'] === null);
+    }
+}

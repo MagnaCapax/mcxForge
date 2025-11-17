@@ -23,6 +23,30 @@ final class inventoryCPUEnvironmentTest extends testCase
         $this->assertTrue(is_string($env['role']));
     }
 
+    public function testEnvironmentRoleGuestWhenHypervisorFlagPresent(): void
+    {
+        $env = \inventoryCPUDetectEnvironment('hypervisor vmx');
+
+        $this->assertTrue($env['isVirtualMachine']);
+        $this->assertEquals('guest', $env['role']);
+    }
+
+    public function testEnvironmentRoleHostWhenVmxWithoutHypervisor(): void
+    {
+        $env = \inventoryCPUDetectEnvironment('vmx');
+
+        $this->assertTrue($env['isVirtualMachine'] === false);
+        $this->assertEquals('host', $env['role']);
+    }
+
+    public function testEnvironmentRoleBaremetalWhenNoVirtFlags(): void
+    {
+        $env = \inventoryCPUDetectEnvironment('');
+
+        $this->assertTrue($env['isVirtualMachine'] === false);
+        $this->assertEquals('baremetal', $env['role']);
+    }
+
     public function testDetectIommuShape(): void
     {
         $info = \collectCpuInventory();
@@ -42,4 +66,3 @@ final class inventoryCPUEnvironmentTest extends testCase
         $this->assertTrue(is_bool($sriov['hasSriovCapableDevices']));
     }
 }
-
