@@ -22,7 +22,7 @@ prioritized and carved into focused ADRs and implementation steps later.
   Network throughput and latency checks (iperf-style tooling, basic ping
   matrix) with non-destructive defaults and guarded flags for heavier tests.
 
-- `benchmarkSuiteALL.php`  
+- `benchmarkSuite.php`  
   High-level entrypoint to run the above suites in a controlled order for
   full-node qualification and emit a single machine-readable report.
 
@@ -51,4 +51,3 @@ prioritized and carved into focused ADRs and implementation steps later.
 - Explore rotating JSONL logs for benchmark runs under `/tmp/` or a
   configurable mcxForge state directory, keeping retention small but useful
   for forensic analysis.
-
