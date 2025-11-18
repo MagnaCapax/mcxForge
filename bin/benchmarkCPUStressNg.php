@@ -14,8 +14,8 @@ if (!defined('EXIT_ERROR')) {
     define('EXIT_ERROR', 1);
 }
 
-require_once __DIR__ . '/../lib/php/benchmark/CPUInfo.php';
-require_once __DIR__ . '/../lib/php/Benchmark/StressNgRunner.php';
+require_once __DIR__ . '/../lib/php/CPUInfo.php';
+require_once __DIR__ . '/../lib/php/benchmark/StressNgRunner.php';
 
 use mcxForge\Benchmark\CPUInfo;
 use mcxForge\Benchmark\StressNgRunner;
