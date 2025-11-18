@@ -46,3 +46,10 @@ mcxforge_summary() {
   fi
 }
 
+# Run summary automatically when this profile is loaded in an interactive shell.
+case "$-" in
+  *i*)
+    mcxforge_summary
+    ;;
+esac
+
