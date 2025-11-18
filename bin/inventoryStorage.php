@@ -4,9 +4,9 @@
 declare(strict_types=1);
 
 /**
- * storageList.php
+ * inventoryStorage.php
  *
- * List block storage devices grouped by bus (USB, SATA, SAS, NVME) with
+ * List block storage devices grouped by bus (USB, SATA, SAS, NVME, OTHER) with
  * normalized sizes in GiB. Supports human-readable output (default),
  * JSON, and PHP serialize formats.
  *
@@ -23,7 +23,7 @@ if (!defined('EXIT_ERROR')) {
     define('EXIT_ERROR', 1);
 }
 
-function storageListMain(array $argv): int
+function inventoryStorageMain(array $argv): int
 {
     [$format, $smartOnly, $colorEnabled] = parseArguments($argv);
 
@@ -131,6 +131,7 @@ function groupDevicesByBus(array $devices, bool $smartOnly): array
         'SATA' => [],
         'SAS' => [],
         'NVME' => [],
+        'OTHER' => [],
     ];
 
     foreach ($devices as $device) {
@@ -200,8 +201,11 @@ function determineBusType(array $device): ?string
     if ($tran === 'nvme' || str_starts_with($name, 'nvme')) {
         return 'NVME';
     }
+    if (str_starts_with($name, 'vd')) {
+        return 'OTHER';
+    }
 
-    return null;
+    return 'OTHER';
 }
 
 /**
@@ -237,7 +241,7 @@ function isSmartCapableBus(string $bus): bool
  */
 function renderHuman(array $groups, bool $colorEnabled): void
 {
-    $order = ['USB', 'SATA', 'SAS', 'NVME'];
+    $order = ['USB', 'SATA', 'SAS', 'NVME', 'OTHER'];
 
     $sectionColor = $colorEnabled ? "\033[1;34m" : '';
     $deviceColor = $colorEnabled ? "\033[0;36m" : '';
@@ -303,9 +307,9 @@ function renderPhp(array $groups): void
 function printHelp(): void
 {
     $help = <<<TEXT
-Usage: storageList.php [--format=human|json|php] [--smart-only] [--no-color]
+Usage: inventoryStorage.php [--format=human|json|php] [--smart-only] [--no-color]
 
-List block storage devices grouped by bus (USB, SATA, SAS, NVME) with sizes in GiB
+List block storage devices grouped by bus (USB, SATA, SAS, NVME, OTHER) with sizes in GiB
 and a simple scheme indicator (NONE, GPT, BIOS, RAID).
 
 Options:
@@ -323,5 +327,5 @@ TEXT;
 }
 
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    exit(storageListMain($argv));
+    exit(inventoryStorageMain($argv));
 }

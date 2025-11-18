@@ -9,8 +9,10 @@ Current automated checks live under `development/testing/` so local runs and CI 
 - `development/testing/phpstan.sh` – runs PHPStan (honours `PHPSTAN_DISABLE_PARALLEL=1`).
 - `development/testing/loc.sh` – prints a LOC breakdown (bin PHP, tests, Bash, docs).
 - `development/testing/adr-lint.sh` – verifies that each ADR under `docs/adr/` contains an `Author:` line in its metadata.
+- `development/testing/author-lint.sh` – verifies that bin PHP entrypoints and development shell helpers declare authorship markers.
+- `development/testing/copyright-lint.sh` – verifies the presence and basic shape of the `LICENSE` file (Apache 2.0).
 
-Storage-specific tests live under `tests/development/` and use a small in-tree harness.
+Storage-specific and other PHP tests live under `development/tests/development/` and use a small in-tree harness.
 
 ## Running locally
 
@@ -27,6 +29,7 @@ This will:
 - Run shell lint where `shellcheck` is available.
 - Run static analysis with PHPStan when installed (or via Composer dev deps).
 - Run ADR metadata checks to ensure all ADRs declare an `Author:` line.
+- Run author and license checks to ensure key entrypoints and helper scripts declare authorship and that the Apache 2.0 license is present.
 
 Verbose logs can be enabled via:
 

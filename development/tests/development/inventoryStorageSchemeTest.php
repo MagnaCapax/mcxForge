@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace mcxForge\Tests;
 
-require_once __DIR__ . '/../../../bin/storageList.php';
+require_once __DIR__ . '/../../../bin/inventoryStorage.php';
 
-final class storageListSchemeTest extends testCase
+final class inventoryStorageSchemeTest extends testCase
 {
     public function testDetermineSchemeRaid(): void
     {

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: Aleksi Ursin
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -23,4 +24,3 @@ for f in "${shell_files[@]}"; do
 done
 
 echo "Shell lint OK"
-

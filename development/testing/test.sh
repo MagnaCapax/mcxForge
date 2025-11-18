@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: Aleksi Ursin
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -30,6 +31,12 @@ PHPSTAN_DISABLE_PARALLEL=1 bash "$DEV_DIR/testing/phpstan.sh" || echo "phpstan s
 
 echo "5) ADR metadata checks"
 bash "$DEV_DIR/testing/adr-lint.sh"
+
+echo "6) Author metadata checks"
+bash "$DEV_DIR/testing/author-lint.sh"
+
+echo "7) License checks"
+bash "$DEV_DIR/testing/copyright-lint.sh"
 
 echo "All tests completed"
 

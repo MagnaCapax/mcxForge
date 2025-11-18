@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace mcxForge\Tests;
 
-require_once __DIR__ . '/../../../bin/storageList.php';
+require_once __DIR__ . '/../../../bin/inventoryStorage.php';
 
-final class storageListGroupingTest extends testCase
+final class inventoryStorageGroupingTest extends testCase
 {
     public function testDetermineBusTypeUsbByTran(): void
     {
@@ -50,7 +50,7 @@ final class storageListGroupingTest extends testCase
         $this->assertEquals('NVME', $bus);
     }
 
-    public function testDetermineBusTypeUnknownReturnsNull(): void
+    public function testDetermineBusTypeUnknownFallsBackToOther(): void
     {
         $device = [
             'tran' => 'firewire',
@@ -58,7 +58,7 @@ final class storageListGroupingTest extends testCase
         ];
 
         $bus = \determineBusType($device);
-        $this->assertTrue($bus === null, 'Unknown transport should result in null bus type');
+        $this->assertEquals('OTHER', $bus, 'Unknown transport should fall back to OTHER bus type');
     }
 
     public function testIsSmartCapableBusPredicate(): void
@@ -106,7 +106,7 @@ final class storageListGroupingTest extends testCase
         $this->assertEquals(1, count($groups['SATA']));
     }
 
-    public function testGroupDevicesByBusSkipsUnknownBus(): void
+    public function testGroupDevicesByBusPlacesUnknownIntoOtherBus(): void
     {
         $devices = [
             ['type' => 'disk', 'tran' => 'firewire', 'name' => 'sdf', 'size' => 100],
@@ -114,6 +114,18 @@ final class storageListGroupingTest extends testCase
 
         $groups = \groupDevicesByBus($devices, false);
         $this->assertEquals(0, count($groups['USB']) + count($groups['SATA']) + count($groups['SAS']) + count($groups['NVME']));
+        $this->assertEquals(1, count($groups['OTHER']));
+    }
+
+    public function testGroupDevicesByBusTreatsVirtioNameAsOtherBus(): void
+    {
+        $devices = [
+            ['type' => 'disk', 'tran' => '', 'name' => 'vda', 'size' => 10 * 1024 * 1024 * 1024],
+        ];
+
+        $groups = \groupDevicesByBus($devices, false);
+        $this->assertEquals(1, count($groups['OTHER']));
+        $this->assertEquals('/dev/vda', $groups['OTHER'][0]['path']);
     }
 
     public function testGroupDevicesByBusTrimsModelAndUsesUnknown(): void

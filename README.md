@@ -20,8 +20,8 @@ The primary deployment target is the `mcxRescue` live system, where mcxForge is 
 
 The first storage helpers are implemented as simple, read‑only CLI scripts:
 
-- `bin/storageList.php` – lists block devices grouped by bus (USB, SATA, SAS, NVME) with normalized sizes and a simple scheme indicator (NONE, GPT, BIOS, RAID). Supports human, JSON, and PHP‑serialized output.
-- `bin/storageTestSmart.php` – discovers SMART‑capable devices via `storageList.php`, starts `smartctl` self‑tests (short/long), and reports power‑on hours and the latest recorded self‑test entry per device.
+- `bin/inventoryStorage.php` – lists block devices grouped by bus (USB, SATA, SAS, NVME, OTHER) with normalized sizes and a simple scheme indicator (NONE, GPT, BIOS, RAID). Supports human, JSON, and PHP‑serialized output.
+- `bin/storageTestSmart.php` – discovers SMART‑capable devices via `bin/inventoryStorage.php`, starts `smartctl` self‑tests (short/long), and reports power‑on hours and the latest recorded self‑test entry per device.
 
 These tools are designed to be safe by default: they do not touch user data or partition tables and can be run on live systems to feed higher‑level workflows.
 
@@ -53,8 +53,8 @@ cd mcxForge
 From there, tools are invoked via the CLI scripts under `bin/`. For example:
 
 ```sh
-bin/storageList.php --format=human
-bin/storageList.php --format=json --smart-only
+bin/inventoryStorage.php --format=human
+bin/inventoryStorage.php --format=json --smart-only
 bin/storageTestSmart.php --test=short
 bin/benchmarkCPUGeekbench.php --version=6
 ```

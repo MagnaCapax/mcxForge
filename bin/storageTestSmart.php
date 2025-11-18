@@ -7,7 +7,7 @@ declare(strict_types=1);
  * storageTestSmart.php
  *
  * Run SMART self-tests on all SMART-capable devices (as reported by
- * storageList.php) and show power-on hours and the latest recorded
+ * inventoryStorage.php) and show power-on hours and the latest recorded
  * self-test entry per device.
  *
  * This script is read-only with respect to user data; it only starts
@@ -29,7 +29,7 @@ function storageTestSmartMain(array $argv): int
 
     $devices = loadSmartCapableDevices();
     if ($devices === null) {
-        fwrite(STDERR, "Error: failed to obtain device list from storageList.php\n");
+        fwrite(STDERR, "Error: failed to obtain device list from inventoryStorage.php\n");
         return EXIT_ERROR;
     }
 
@@ -92,7 +92,7 @@ function parseSmartArguments(array $argv): array
  */
 function loadSmartCapableDevices(): ?array
 {
-    $scriptPath = __DIR__ . '/storageList.php';
+    $scriptPath = __DIR__ . '/inventoryStorage.php';
 
     if (!is_file($scriptPath) || !is_readable($scriptPath)) {
         return null;

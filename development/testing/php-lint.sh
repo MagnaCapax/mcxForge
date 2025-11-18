@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: Aleksi Ursin
 set -euo pipefail
 
 # Lint all PHP files (excluding vendor) with `php -l`.
@@ -20,4 +21,3 @@ if [[ $fail -ne 0 ]]; then
   exit 1
 fi
 echo "PHP lint OK (${#FILES[@]} files)"
-

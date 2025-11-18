@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: Aleksi Ursin
 set -euo pipefail
 
 echo "[ci] starting CI prompt assembly…" >&1

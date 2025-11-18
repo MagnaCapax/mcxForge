@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Author: Aleksi Ursin
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -30,4 +31,3 @@ if [[ $status -ne 0 ]]; then
 fi
 
 exit "$status"
-

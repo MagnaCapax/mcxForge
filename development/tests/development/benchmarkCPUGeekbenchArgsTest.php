@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace mcxForge\Tests;
 
 require_once __DIR__ . '/../../../bin/benchmarkCPUGeekbench.php';
-require_once __DIR__ . '/../../../lib/php/Benchmark/GeekbenchRunner.php';
+require_once __DIR__ . '/../../../lib/php/benchmark/GeekbenchRunner.php';
 
 use mcxForge\Benchmark\GeekbenchRunner;
 
