@@ -47,6 +47,12 @@ bash "$DEV_DIR/testing/author-lint.sh"
 echo "10) License checks"
 bash "$DEV_DIR/testing/copyright-lint.sh"
 
+echo "11) PHP complexity snapshot (phploc)"
+bash "$DEV_DIR/testing/complexity-phploc.sh" || true
+
+echo "12) PHP complexity (phpmd)"
+bash "$DEV_DIR/testing/complexity-phpmd.sh" || true
+
 echo "All tests completed"
 
 echo
