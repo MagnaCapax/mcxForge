@@ -36,11 +36,12 @@ function benchmarkCPUSysbenchMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCPUSysbench]%s Running sysbench cpu for %ds on %d thread(s)...%s\n",
+                "%s[benchmarkCPUSysbench]%s Running sysbench cpu for %ds on %d thread(s)... Log file: %s%s\n",
                 $titleColor,
                 $resetColor,
                 $duration,
                 $threads,
+                $logFile,
                 $resetColor
             )
         );
@@ -82,33 +83,32 @@ function benchmarkCPUSysbenchMain(array $argv): int
     }
 
     $threadsCount = max(1, $threads);
-    $normalized = $score / $threadsCount;
+    $perThread = $score / $threadsCount;
 
     if (!$scoreOnly) {
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCPUSysbench]%s Log file: %s\n",
-                $titleColor,
-                $resetColor,
-                $logFile
-            )
-        );
-        fwrite(
-            STDOUT,
-            sprintf(
-                "%s[benchmarkCPUSysbench]%s Parsed score: %s%.2f%s events/s (%.2f per thread)\n",
+                "%s[benchmarkCPUSysbench]%s Parsed score: %s%.2f%s events/s total (%.2f per thread, %d thread(s))\n",
                 $titleColor,
                 $resetColor,
                 $scoreColor,
                 $score,
                 $resetColor,
-                $normalized
+                $perThread,
+                $threadsCount
             )
         );
     }
 
-    fwrite(STDOUT, sprintf("{{SCORE:%.2f}}\n", $normalized));
+    $payload = benchmarkCPUSysbenchBuildScorePayload($score, $perThread, $threadsCount, $duration, $logFile);
+    $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($json === false) {
+        fwrite(STDERR, "[benchmarkCPUSysbench] Failed to encode JSON score payload\n");
+        return EXIT_ERROR;
+    }
+
+    fwrite(STDOUT, sprintf("[benchmarkCPUSysbench] %s\n", $json));
 
     return EXIT_OK;
 }
@@ -202,4 +202,23 @@ TEXT;
 
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit(benchmarkCPUSysbenchMain($argv));
+}
+
+/**
+ * @return array<string,mixed>
+ */
+function benchmarkCPUSysbenchBuildScorePayload(float $scoreTotal, float $scorePerThread, int $threads, int $durationSeconds, string $logFile): array
+{
+    return [
+        'schema' => 'mcxForge.cpu-benchmark.v1',
+        'benchmark' => 'cpusysbench',
+        'status' => 'ok',
+        'metric' => 'events_per_second',
+        'unit' => 'events/s',
+        'score' => $scoreTotal,
+        'scorePerThread' => $scorePerThread,
+        'threads' => $threads,
+        'durationSeconds' => $durationSeconds,
+        'logFile' => $logFile,
+    ];
 }

@@ -161,7 +161,14 @@ function benchmarkCPUXmrigMain(array $argv): int
         }
     }
 
-    fwrite(STDOUT, sprintf("[benchmarkCPUXmrig] {{SCORE:%.2f}}\n", $average));
+    $payload = benchmarkCPUXmrigBuildScorePayload($average, $perThread, $threads, $duration, $logFile);
+    $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($json === false) {
+        fwrite(STDERR, "[benchmarkCPUXmrig] Failed to encode JSON score payload\n");
+        return EXIT_ERROR;
+    }
+
+    fwrite(STDOUT, sprintf("[benchmarkCPUXmrig] %s\n", $json));
 
     return $exitCode === 0 ? EXIT_OK : EXIT_ERROR;
 }
@@ -286,4 +293,23 @@ TEXT;
 
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit(benchmarkCPUXmrigMain($argv));
+}
+
+/**
+ * @return array<string,mixed>
+ */
+function benchmarkCPUXmrigBuildScorePayload(float $scoreTotal, float $scorePerThread, int $threads, int $durationSeconds, string $logFile): array
+{
+    return [
+        'schema' => 'mcxForge.cpu-benchmark.v1',
+        'benchmark' => 'cpuxmrig',
+        'status' => 'ok',
+        'metric' => 'hashrate',
+        'unit' => 'H/s',
+        'score' => $scoreTotal,
+        'scorePerThread' => $scorePerThread,
+        'threads' => $threads,
+        'durationSeconds' => $durationSeconds,
+        'logFile' => $logFile,
+    ];
 }

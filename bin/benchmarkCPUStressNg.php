@@ -36,11 +36,12 @@ function benchmarkCPUStressNgMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCPUStressNg]%s Running stress-ng for %ds on %d CPU worker(s)...%s\n",
+                "%s[benchmarkCPUStressNg]%s Running stress-ng for %ds on %d CPU worker(s)... Log file: %s%s\n",
                 $titleColor,
                 $resetColor,
                 $duration,
                 $cpuCount,
+                $logFile,
                 $resetColor
             )
         );
@@ -91,33 +92,32 @@ function benchmarkCPUStressNgMain(array $argv): int
     }
 
     $threads = max(1, $cpuCount);
-    $normalized = $score / $threads;
+    $perThread = $score / $threads;
 
     if (!$scoreOnly) {
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCPUStressNg]%s Log file: %s\n",
-                $titleColor,
-                $resetColor,
-                $logFile
-            )
-        );
-        fwrite(
-            STDOUT,
-            sprintf(
-                "%s[benchmarkCPUStressNg]%s Parsed score: %s%.2f%s bogo ops/s (%.2f per thread)\n",
+                "%s[benchmarkCPUStressNg]%s Parsed score: %s%.2f%s bogo ops/s total (%.2f per thread, %d thread(s))\n",
                 $titleColor,
                 $resetColor,
                 $scoreColor,
                 $score,
                 $resetColor,
-                $normalized
+                $perThread,
+                $threads
             )
         );
     }
 
-    fwrite(STDOUT, sprintf("{{SCORE:%.2f}}\n", $normalized));
+    $payload = benchmarkCPUStressNgBuildScorePayload($score, $perThread, $threads, $duration, $logFile);
+    $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($json === false) {
+        fwrite(STDERR, "[benchmarkCPUStressNg] Failed to encode JSON score payload\n");
+        return EXIT_ERROR;
+    }
+
+    fwrite(STDOUT, sprintf("[benchmarkCPUStressNg] %s\n", $json));
 
     return EXIT_OK;
 }
@@ -211,4 +211,23 @@ TEXT;
 
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit(benchmarkCPUStressNgMain($argv));
+}
+
+/**
+ * @return array<string,mixed>
+ */
+function benchmarkCPUStressNgBuildScorePayload(float $scoreTotal, float $scorePerThread, int $threads, int $durationSeconds, string $logFile): array
+{
+    return [
+        'schema' => 'mcxForge.cpu-benchmark.v1',
+        'benchmark' => 'cpustressng',
+        'status' => 'ok',
+        'metric' => 'bogo_ops_per_second',
+        'unit' => 'bogo ops/s',
+        'score' => $scoreTotal,
+        'scorePerThread' => $scorePerThread,
+        'threads' => $threads,
+        'durationSeconds' => $durationSeconds,
+        'logFile' => $logFile,
+    ];
 }

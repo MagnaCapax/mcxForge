@@ -52,11 +52,12 @@ function benchmarkGeekbenchMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkGeekbench]%s Running %s (version %s)...%s\n",
+                "%s[benchmarkGeekbench]%s Running %s (version %s)... Log file: %s%s\n",
                 $titleColor,
                 $resetColor,
                 $label,
                 $versionString,
+                $logFile,
                 $resetColor
             )
         );
@@ -123,15 +124,6 @@ function benchmarkGeekbenchMain(array $argv): int
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkGeekbench]%s Log file: %s\n",
-                $titleColor,
-                $resetColor,
-                $logFile
-            )
-        );
-        fwrite(
-            STDOUT,
-            sprintf(
                 "%s[benchmarkGeekbench]%s Parsed score (multi-core preferred): %s%d%s\n",
                 $titleColor,
                 $resetColor,
@@ -142,9 +134,38 @@ function benchmarkGeekbenchMain(array $argv): int
         );
     }
 
-    fwrite(STDOUT, sprintf("{{SCORE:%d}}\n", $score));
+    $payload = benchmarkGeekbenchBuildScorePayload($major, $score, $logFile);
+    $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($json === false) {
+        fwrite(STDERR, "[benchmarkGeekbench] Failed to encode JSON score payload\n");
+        return EXIT_ERROR;
+    }
+
+    fwrite(STDOUT, sprintf("[benchmarkCPUGeekbench] %s\n", $json));
 
     return $exitCode === 0 ? EXIT_OK : EXIT_ERROR;
+}
+
+/**
+ * @return array<string,mixed>
+ */
+function benchmarkGeekbenchBuildScorePayload(string $major, int $score, string $logFile): array
+{
+    $major = trim($major) === '5' ? '5' : '6';
+
+    return [
+        'schema' => 'mcxForge.cpu-benchmark.v1',
+        'benchmark' => 'cpugeekbench',
+        'status' => 'ok',
+        'metric' => 'geekbench_score',
+        'unit' => 'score',
+        'score' => $score,
+        // Geekbench scores are aggregate; per-thread / single-thread may be added in a future schema bump.
+        'threads' => null,
+        'durationSeconds' => null,
+        'majorVersion' => (int) $major,
+        'logFile' => $logFile,
+    ];
 }
 
 /**

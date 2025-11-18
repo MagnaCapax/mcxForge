@@ -35,19 +35,41 @@ final class StressNgRunner
 
         foreach ($lines as $line) {
             $trimmed = trim($line);
-
-            if (stripos($trimmed, 'cpu ') === false && stripos($trimmed, 'cpu-') === false) {
-                continue;
-            }
-            if (stripos($trimmed, 'bogo ops/s') === false) {
+            if ($trimmed === '') {
                 continue;
             }
 
-            if (preg_match('/([0-9]+(?:\.[0-9]+)?)\s*bogo\s*ops\/s/i', $trimmed, $matches) === 1) {
-                $value = (float) $matches[1];
-                if ($best === null || $value > $best) {
-                    $best = $value;
+            // Focus on metric lines for the CPU stressor. Newer stress-ng versions emit a header
+            // row describing columns and then a data row with numeric fields only.
+            if (stripos($trimmed, 'cpu') === false) {
+                continue;
+            }
+            if (stripos($trimmed, 'metrc:') === false && stripos($trimmed, 'metric:') === false) {
+                continue;
+            }
+
+            $tokens = preg_split('/\s+/', $trimmed);
+            if (!is_array($tokens)) {
+                continue;
+            }
+
+            $numbers = [];
+            foreach ($tokens as $token) {
+                if (preg_match('/^-?(?:[0-9]+(?:\.[0-9]+)?)$/', $token)) {
+                    $numbers[] = (float) $token;
                 }
+            }
+
+            // Expect at least two numeric columns at the end: real-time bogo ops/s and
+            // CPU-time bogo ops/s. We prefer the real-time figure (second-to-last).
+            $count = count($numbers);
+            if ($count < 2) {
+                continue;
+            }
+
+            $candidate = $numbers[$count - 2];
+            if ($best === null || $candidate > $best) {
+                $best = $candidate;
             }
         }
 
