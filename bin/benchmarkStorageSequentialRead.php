@@ -26,6 +26,9 @@ if (!defined('EXIT_ERROR')) {
 }
 
 require_once __DIR__ . '/inventoryStorage.php';
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
 
 function benchmarkStorageSequentialReadMain(array $argv): int
 {
@@ -33,7 +36,7 @@ function benchmarkStorageSequentialReadMain(array $argv): int
 
     $devices = benchmarkStorageSequentialReadDiscoverDevices($deviceFilter);
     if (count($devices) === 0) {
-        fwrite(STDERR, "Error: no suitable block devices found for sequential read benchmark.\n");
+        \mcxForge\Logger::logStderr("Error: no suitable block devices found for sequential read benchmark.\n");
         return EXIT_ERROR;
     }
 
@@ -210,7 +213,7 @@ function benchmarkStorageSequentialReadParseArguments(array $argv): array
             $value = substr($arg, strlen('--device='));
             $value = trim($value);
             if ($value === '') {
-                fwrite(STDERR, "Error: --device must not be empty\n");
+                \mcxForge\Logger::logStderr("Error: --device must not be empty\n");
                 exit(EXIT_ERROR);
             }
             $device = $value;
@@ -221,7 +224,7 @@ function benchmarkStorageSequentialReadParseArguments(array $argv): array
             $value = substr($arg, strlen('--runtime='));
             $value = trim($value);
             if (!ctype_digit($value) || (int)$value <= 0) {
-                fwrite(STDERR, "Error: invalid --runtime value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --runtime value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $runtimeTarget = (int)$value;
@@ -232,14 +235,14 @@ function benchmarkStorageSequentialReadParseArguments(array $argv): array
             $value = substr($arg, strlen('--bs-mib='));
             $value = trim($value);
             if (!ctype_digit($value) || (int)$value <= 0) {
-                fwrite(STDERR, "Error: invalid --bs-mib value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --bs-mib value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $bsMiB = (int)$value;
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 

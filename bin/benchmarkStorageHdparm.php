@@ -24,19 +24,22 @@ if (!defined('EXIT_ERROR')) {
 }
 
 require_once __DIR__ . '/inventoryStorage.php';
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
 
 function benchmarkStorageHdparmMain(array $argv): int
 {
     [$deviceFilter, $runs, $scoreOnly, $colorEnabled] = benchmarkStorageHdparmParseArguments($argv);
 
     if (!benchmarkStorageHdparmHasHdparm()) {
-        fwrite(STDERR, "Error: hdparm not found in PATH. Install hdparm to use this benchmark.\n");
+        \mcxForge\Logger::logStderr("Error: hdparm not found in PATH. Install hdparm to use this benchmark.\n");
         return EXIT_ERROR;
     }
 
     $devices = benchmarkStorageHdparmDiscoverDevices($deviceFilter);
     if (count($devices) === 0) {
-        fwrite(STDERR, "Error: no suitable block devices found for hdparm benchmark.\n");
+        \mcxForge\Logger::logStderr("Error: no suitable block devices found for hdparm benchmark.\n");
         return EXIT_ERROR;
     }
 
@@ -191,7 +194,7 @@ function benchmarkStorageHdparmParseArguments(array $argv): array
             $value = substr($arg, strlen('--device='));
             $value = trim($value);
             if ($value === '') {
-                fwrite(STDERR, "Error: --device must not be empty\n");
+                \mcxForge\Logger::logStderr("Error: --device must not be empty\n");
                 exit(EXIT_ERROR);
             }
             $device = $value;
@@ -202,14 +205,14 @@ function benchmarkStorageHdparmParseArguments(array $argv): array
             $value = substr($arg, strlen('--runs='));
             $value = trim($value);
             if (!ctype_digit($value) || (int)$value <= 0) {
-                fwrite(STDERR, "Error: invalid --runs value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --runs value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $runs = (int)$value;
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 

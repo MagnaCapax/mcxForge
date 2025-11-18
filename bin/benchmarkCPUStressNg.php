@@ -14,8 +14,11 @@ if (!defined('EXIT_ERROR')) {
     define('EXIT_ERROR', 1);
 }
 
-require_once __DIR__ . '/../lib/php/CPUInfo.php';
+require_once __DIR__ . '/../lib/php/benchmark/CPUInfo.php';
 require_once __DIR__ . '/../lib/php/benchmark/StressNgRunner.php';
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
 
 use mcxForge\Benchmark\CPUInfo;
 use mcxForge\Benchmark\StressNgRunner;
@@ -113,7 +116,7 @@ function benchmarkCPUStressNgMain(array $argv): int
     $payload = benchmarkCPUStressNgBuildScorePayload($score, $perThread, $threads, $duration, $logFile);
     $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($json === false) {
-        fwrite(STDERR, "[benchmarkCPUStressNg] Failed to encode JSON score payload\n");
+        \mcxForge\Logger::logStderr("[benchmarkCPUStressNg] Failed to encode JSON score payload\n");
         return EXIT_ERROR;
     }
 
@@ -159,7 +162,7 @@ function benchmarkCPUStressNgParseArguments(array $argv): array
             $value = substr($arg, strlen('--duration='));
             $value = trim($value);
             if (!ctype_digit($value) || (int) $value <= 0) {
-                fwrite(STDERR, "Error: invalid --duration value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --duration value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $duration = (int) $value;
@@ -170,14 +173,14 @@ function benchmarkCPUStressNgParseArguments(array $argv): array
             $value = substr($arg, strlen('--cpu-count='));
             $value = trim($value);
             if (!ctype_digit($value) || (int) $value <= 0) {
-                fwrite(STDERR, "Error: invalid --cpu-count value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --cpu-count value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $cpuCount = (int) $value;
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 

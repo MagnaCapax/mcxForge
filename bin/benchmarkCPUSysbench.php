@@ -16,6 +16,9 @@ if (!defined('EXIT_ERROR')) {
 
 require_once __DIR__ . '/../lib/php/benchmark/CPUInfo.php';
 require_once __DIR__ . '/../lib/php/benchmark/SysbenchCPURunner.php';
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
 
 use mcxForge\Benchmark\CPUInfo;
 use mcxForge\Benchmark\SysbenchCPURunner;
@@ -104,7 +107,7 @@ function benchmarkCPUSysbenchMain(array $argv): int
     $payload = benchmarkCPUSysbenchBuildScorePayload($score, $perThread, $threadsCount, $duration, $logFile);
     $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($json === false) {
-        fwrite(STDERR, "[benchmarkCPUSysbench] Failed to encode JSON score payload\n");
+        \mcxForge\Logger::logStderr("[benchmarkCPUSysbench] Failed to encode JSON score payload\n");
         return EXIT_ERROR;
     }
 
@@ -150,7 +153,7 @@ function benchmarkCPUSysbenchParseArguments(array $argv): array
             $value = substr($arg, strlen('--duration='));
             $value = trim($value);
             if (!ctype_digit($value) || (int) $value <= 0) {
-                fwrite(STDERR, "Error: invalid --duration value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --duration value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $duration = (int) $value;
@@ -161,14 +164,14 @@ function benchmarkCPUSysbenchParseArguments(array $argv): array
             $value = substr($arg, strlen('--threads='));
             $value = trim($value);
             if (!ctype_digit($value) || (int) $value <= 0) {
-                fwrite(STDERR, "Error: invalid --threads value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --threads value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $threads = (int) $value;
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 

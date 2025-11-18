@@ -16,6 +16,10 @@ declare(strict_types=1);
  * @author Aleksi Ursin
  */
 
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
+
 if (!defined('EXIT_OK')) {
     define('EXIT_OK', 0);
 }
@@ -29,7 +33,7 @@ function inventoryStorageMain(array $argv): int
 
     $devices = getBlockDevices();
     if ($devices === null) {
-        fwrite(STDERR, "Error: failed to execute lsblk or parse its output.\n");
+        \mcxForge\Logger::logStderr("Error: failed to execute lsblk or parse its output.\n");
         return EXIT_ERROR;
     }
 
@@ -76,7 +80,7 @@ function parseArguments(array $argv): array
         if (str_starts_with($arg, '--format=')) {
             $value = substr($arg, strlen('--format='));
             if (!in_array($value, ['human', 'json', 'php'], true)) {
-                fwrite(STDERR, "Error: unsupported format '$value'. Use human, json, or php.\n");
+                \mcxForge\Logger::logStderr("Error: unsupported format '$value'. Use human, json, or php.\n");
                 exit(EXIT_ERROR);
             }
             $format = $value;
@@ -93,7 +97,7 @@ function parseArguments(array $argv): array
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '$arg'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '$arg'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 
@@ -289,7 +293,7 @@ function renderJson(array $groups): void
 {
     $encoded = json_encode($groups, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     if ($encoded === false) {
-        fwrite(STDERR, "Error: failed to encode JSON output.\n");
+        \mcxForge\Logger::logStderr("Error: failed to encode JSON output.\n");
         exit(EXIT_ERROR);
     }
 

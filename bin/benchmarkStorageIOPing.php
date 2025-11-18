@@ -24,6 +24,9 @@ if (!defined('EXIT_ERROR')) {
 }
 
 require_once __DIR__ . '/inventoryStorage.php';
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
 
 /**
  * @return int
@@ -33,13 +36,13 @@ function benchmarkStorageIOPingMain(array $argv): int
     [$deviceFilter, $count, $scoreOnly, $colorEnabled] = benchmarkStorageIOPingParseArguments($argv);
 
     if (!benchmarkStorageIOPingHasIOPing()) {
-        fwrite(STDERR, "Error: ioping not found in PATH. Install ioping to use this benchmark.\n");
+        \mcxForge\Logger::logStderr("Error: ioping not found in PATH. Install ioping to use this benchmark.\n");
         return EXIT_ERROR;
     }
 
     $devices = benchmarkStorageIOPingDiscoverDevices($deviceFilter);
     if (count($devices) === 0) {
-        fwrite(STDERR, "Error: no suitable block devices found for ioping benchmark.\n");
+        \mcxForge\Logger::logStderr("Error: no suitable block devices found for ioping benchmark.\n");
         return EXIT_ERROR;
     }
 
@@ -201,7 +204,7 @@ function benchmarkStorageIOPingParseArguments(array $argv): array
             $value = substr($arg, strlen('--device='));
             $value = trim($value);
             if ($value === '') {
-                fwrite(STDERR, "Error: --device must not be empty\n");
+                \mcxForge\Logger::logStderr("Error: --device must not be empty\n");
                 exit(EXIT_ERROR);
             }
             $device = $value;
@@ -212,14 +215,14 @@ function benchmarkStorageIOPingParseArguments(array $argv): array
             $value = substr($arg, strlen('--count='));
             $value = trim($value);
             if (!ctype_digit($value) || (int)$value <= 0) {
-                fwrite(STDERR, "Error: invalid --count value '{$value}'\n");
+                \mcxForge\Logger::logStderr("Error: invalid --count value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $count = (int)$value;
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 

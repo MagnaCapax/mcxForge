@@ -24,6 +24,9 @@ if (!defined('EXIT_ERROR')) {
 }
 
 require_once __DIR__ . '/../lib/php/benchmark/GeekbenchRunner.php';
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
 
 use mcxForge\Benchmark\GeekbenchRunner;
 
@@ -36,7 +39,7 @@ function benchmarkGeekbenchMain(array $argv): int
     try {
         $versionString = $runner->resolveVersionString($major);
     } catch (\InvalidArgumentException $e) {
-        fwrite(STDERR, "Error: " . $e->getMessage() . PHP_EOL);
+        \mcxForge\Logger::logStderr("Error: " . $e->getMessage() . PHP_EOL);
         return EXIT_ERROR;
     }
 
@@ -137,7 +140,7 @@ function benchmarkGeekbenchMain(array $argv): int
     $payload = benchmarkGeekbenchBuildScorePayload($major, $score, $logFile);
     $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($json === false) {
-        fwrite(STDERR, "[benchmarkGeekbench] Failed to encode JSON score payload\n");
+        \mcxForge\Logger::logStderr("[benchmarkGeekbench] Failed to encode JSON score payload\n");
         return EXIT_ERROR;
     }
 
@@ -204,14 +207,14 @@ function benchmarkGeekbenchParseArguments(array $argv): array
             $value = substr($arg, strlen('--version='));
             $value = trim($value);
             if (!in_array($value, ['5', '6'], true)) {
-                fwrite(STDERR, "Error: unsupported --version value '{$value}', use 5 or 6.\n");
+                \mcxForge\Logger::logStderr("Error: unsupported --version value '{$value}', use 5 or 6.\n");
                 exit(EXIT_ERROR);
             }
             $major = $value;
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 

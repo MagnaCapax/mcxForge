@@ -16,6 +16,10 @@ declare(strict_types=1);
  * @author Aleksi Ursin
  */
 
+require_once __DIR__ . '/../lib/php/Logger.php';
+
+\mcxForge\Logger::initStreamLogging();
+
 if (!defined('EXIT_OK')) {
     define('EXIT_OK', 0);
 }
@@ -29,12 +33,12 @@ function storageTestSmartMain(array $argv): int
 
     $devices = loadSmartCapableDevices();
     if ($devices === null) {
-        fwrite(STDERR, "Error: failed to obtain device list from inventoryStorage.php\n");
+        \mcxForge\Logger::logStderr("Error: failed to obtain device list from inventoryStorage.php\n");
         return EXIT_ERROR;
     }
 
     if (count($devices) === 0) {
-        fwrite(STDERR, "No SMART-capable devices found.\n");
+        \mcxForge\Logger::logStderr("No SMART-capable devices found.\n");
         return EXIT_OK;
     }
 
@@ -73,7 +77,7 @@ function parseSmartArguments(array $argv): array
         if (str_starts_with($arg, '--test=')) {
             $value = substr($arg, strlen('--test='));
             if (!in_array($value, ['short', 'long'], true)) {
-                fwrite(STDERR, "Error: unsupported test type '$value'. Use short or long.\n");
+                \mcxForge\Logger::logStderr("Error: unsupported test type '$value'. Use short or long.\n");
                 exit(EXIT_ERROR);
             }
             $testType = $value;
@@ -90,7 +94,7 @@ function parseSmartArguments(array $argv): array
             continue;
         }
 
-        fwrite(STDERR, "Error: unrecognized argument '$arg'. Use --help for usage.\n");
+        \mcxForge\Logger::logStderr("Error: unrecognized argument '$arg'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 
@@ -165,12 +169,13 @@ function startSmartTests(array $devices, string $testType): void
         exec($cmd, $output, $exitCode);
 
         if ($exitCode !== 0) {
-            $message = implode(' ', $output);
-            fwrite(STDERR, sprintf(
+            $message = trim(implode(' ', $output));
+            $logLine = sprintf(
                 "Warning: smartctl test start failed for %s (%s)\n",
                 $path,
-                trim($message)
-            ));
+                $message
+            );
+            \mcxForge\Logger::logStderr($logLine);
         }
     }
 }
@@ -218,10 +223,8 @@ function runSmartInfo(string $path): array
     exec($cmd, $output, $exitCode);
 
     if ($exitCode !== 0) {
-        fwrite(STDERR, sprintf(
-            "Warning: smartctl info failed for %s\n",
-            $path
-        ));
+        $logLine = sprintf("Warning: smartctl info failed for %s\n", $path);
+        \mcxForge\Logger::logStderr($logLine);
         return [
             'powerOnHours' => null,
             'lastSelfTestLine' => null,
