@@ -38,7 +38,12 @@ if (!defined('EXIT_ERROR')) {
 
 function benchmarkStorageFioMetadataMain(array $argv): int
 {
-    [$targetDir, $runtime, $numJobs, $nrFiles, $fileSize, $scoreOnly, $colorEnabled] = benchmarkStorageFioMetadataParseArguments($argv);
+    try {
+        [$targetDir, $runtime, $numJobs, $nrFiles, $fileSize, $scoreOnly, $colorEnabled] = benchmarkStorageFioMetadataParseArguments($argv);
+    } catch (\InvalidArgumentException $e) {
+        fwrite(STDERR, $e->getMessage() . "\n");
+        return EXIT_ERROR;
+    }
 
     $fioBin = benchmarkStorageFioMetadataResolveFioBinary();
     if ($fioBin === null) {
@@ -226,8 +231,9 @@ function benchmarkStorageFioMetadataParseArguments(array $argv): array
     }
 
     if ($targetDir === '') {
-        fwrite(STDERR, "Error: --target-dir is required and must point to a writable directory.\n");
-        exit(EXIT_ERROR);
+        throw new \InvalidArgumentException(
+            'Error: --target-dir is required and must point to a writable directory.'
+        );
     }
 
     return [$targetDir, $runtime, $numJobs, $nrFiles, $fileSize, $scoreOnly, $colorEnabled];
@@ -377,4 +383,3 @@ function benchmarkStorageFioMetadataBuildLogFilePath(?\DateTimeImmutable $now = 
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit(benchmarkStorageFioMetadataMain($argv));
 }
-

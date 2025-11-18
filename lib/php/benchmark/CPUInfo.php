@@ -4,8 +4,20 @@ declare(strict_types=1);
 
 namespace mcxForge\Benchmark;
 
+/**
+ * CPUInfo provides helpers to detect the number of logical CPU cores
+ * available on the current host using lightweight, read-only heuristics.
+ */
 final class CPUInfo
 {
+    /**
+     * Detect the number of logical CPU cores available for running benchmarks.
+     *
+     * This prefers `nproc` when available and falls back to parsing /proc/cpuinfo,
+     * always returning at least one core so callers have a safe default.
+     *
+     * @return int Detected logical core count, minimum of one.
+     */
     public static function detectLogicalCores(): int
     {
         $count = self::detectWithNproc();
@@ -58,4 +70,3 @@ final class CPUInfo
         return $count > 0 ? $count : null;
     }
 }
-

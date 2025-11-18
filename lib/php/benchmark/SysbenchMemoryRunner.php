@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace mcxForge\Benchmark;
 
+/**
+ * SysbenchMemoryRunner builds and executes sysbench memory workloads and
+ * parses their throughput metrics for use in mcxForge benchmarks.
+ */
 final class SysbenchMemoryRunner
 {
+    /**
+     * Build a deterministic log file path for memory sysbench runs in /tmp.
+     *
+     * @param \DateTimeImmutable|null $now Optional time source for testability.
+     * @return string Absolute path to the log file.
+     */
     public function buildLogFilePath(?\DateTimeImmutable $now = null): string
     {
         $now = $now ?? new \DateTimeImmutable('now');
@@ -14,6 +24,16 @@ final class SysbenchMemoryRunner
         return sprintf('/tmp/benchmarkMemorySysbench-%s.log', $date);
     }
 
+    /**
+     * Build a sysbench memory command line with the requested parameters.
+     *
+     * @param int    $threads       Number of worker threads to start.
+     * @param int    $totalSizeGiB  Total memory size to exercise in GiB.
+     * @param int    $blockSizeKiB  Block size to use in KiB.
+     * @param string $accessMode    Access mode (seq or rnd).
+     * @param string $operation     Operation type (read, write, or rwr).
+     * @return string Shell command suitable for execution.
+     */
     public function buildCommand(
         int $threads,
         int $totalSizeGiB,
@@ -39,7 +59,10 @@ final class SysbenchMemoryRunner
     }
 
     /**
-     * @param array<int,string> $lines
+     * Parse sysbench memory output and extract MiB/sec throughput.
+     *
+     * @param array<int,string> $lines Raw sysbench output lines.
+     * @return float|null Parsed throughput in MiB/sec, or null when missing.
      */
     public function parseThroughput(array $lines): ?float
     {
@@ -59,6 +82,17 @@ final class SysbenchMemoryRunner
         return null;
     }
 
+    /**
+     * Run a sysbench memory workload and capture its output lines.
+     *
+     * @param int      $threads       Number of worker threads to start.
+     * @param int      $totalSizeGiB  Total memory size to exercise in GiB.
+     * @param int      $blockSizeKiB  Block size to use in KiB.
+     * @param string   $accessMode    Access mode (seq or rnd).
+     * @param string   $operation     Operation type (read, write, or rwr).
+     * @param int|null $exitCode      Populated with the sysbench exit code.
+     * @return array<int,string> Collected output lines from sysbench.
+     */
     public function run(
         int $threads,
         int $totalSizeGiB,
@@ -87,4 +121,3 @@ final class SysbenchMemoryRunner
         return is_string($result) && trim($result) !== '';
     }
 }
-

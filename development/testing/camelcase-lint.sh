@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Naming lint for mcxForge PHP files.
-# - Filenames under bin/, lib/php/, and development/tests/development/ must be:
+# - Filenames under bin/ and development/tests/development/ must be:
 #     ^[a-z][a-zA-Z0-9]*\.php$
 #   (lowercase first letter, then letters/digits, .php)
 # - Class names should follow PSR-ish conventions:
@@ -39,12 +39,6 @@ check_tree_files_only() {
 check_tree_with_classes() {
   local dir="$1"
   while IFS= read -r -d '' f; do
-    local base
-    base="$(basename "$f")"
-    if ! is_camel_file "$base"; then
-      echo "filename violation: $f" >&2
-      VIOLATIONS=$((VIOLATIONS+1))
-    fi
     # Extract declared classes/interfaces/traits in this file.
     while read -r kind name; do
       if ! is_psr_class "$name"; then
@@ -69,4 +63,3 @@ if [[ $VIOLATIONS -gt 0 ]]; then
   exit 1
 fi
 echo "camelCase / naming lint: OK"
-

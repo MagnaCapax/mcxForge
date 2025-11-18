@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace mcxForge\Benchmark;
 
+/**
+ * StressNgRunner builds and executes CPU-focused stress-ng workloads and
+ * extracts a representative operations-per-second score from their output.
+ */
 final class StressNgRunner
 {
+    /**
+     * Build a deterministic log file path for CPU stress-ng runs in /tmp.
+     *
+     * @param \DateTimeImmutable|null $now Optional time source for testability.
+     * @return string Absolute path to the log file.
+     */
     public function buildLogFilePath(?\DateTimeImmutable $now = null): string
     {
         $now = $now ?? new \DateTimeImmutable('now');
@@ -14,6 +24,13 @@ final class StressNgRunner
         return sprintf('/tmp/benchmarkCPUStressNg-%s.log', $date);
     }
 
+    /**
+     * Build a stress-ng command line that exercises CPU cores with metrics enabled.
+     *
+     * @param int $cpuCount        Number of logical CPU workers to start.
+     * @param int $durationSeconds Duration of the run in seconds.
+     * @return string Shell command suitable for execution.
+     */
     public function buildCommand(int $cpuCount, int $durationSeconds): string
     {
         $cpuCount = max(1, $cpuCount);
@@ -27,7 +44,10 @@ final class StressNgRunner
     }
 
     /**
-     * @param array<int,string> $lines
+     * Parse stress-ng CPU metrics and return a representative bogo ops per second score.
+     *
+     * @param array<int,string> $lines Raw stress-ng output lines.
+     * @return float|null Best detected real-time bogo ops per second, or null when missing.
      */
     public function parseScore(array $lines): ?float
     {
@@ -76,6 +96,14 @@ final class StressNgRunner
         return $best;
     }
 
+    /**
+     * Run a stress-ng CPU workload and capture its output lines.
+     *
+     * @param int      $cpuCount        Number of logical CPU workers to start.
+     * @param int      $durationSeconds Duration of the run in seconds.
+     * @param int|null $exitCode        Populated with the stress-ng exit code.
+     * @return array<int,string> Collected output lines from stress-ng.
+     */
     public function run(int $cpuCount, int $durationSeconds, ?int &$exitCode = null): array
     {
         if (!$this->commandExists('stress-ng')) {

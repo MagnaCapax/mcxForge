@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace mcxForge\Benchmark;
 
+/**
+ * MemoryStressNgRunner builds and executes stress-ng memory workloads and
+ * parses their throughput metrics for use in mcxForge benchmarks.
+ */
 final class MemoryStressNgRunner
 {
+    /**
+     * Build a deterministic log file path for memory stress-ng runs in /tmp.
+     *
+     * @param \DateTimeImmutable|null $now Optional time source for testability.
+     * @return string Absolute path to the log file.
+     */
     public function buildLogFilePath(?\DateTimeImmutable $now = null): string
     {
         $now = $now ?? new \DateTimeImmutable('now');
@@ -14,6 +24,14 @@ final class MemoryStressNgRunner
         return sprintf('/tmp/benchmarkMemoryStressNg-%s.log', $date);
     }
 
+    /**
+     * Build a stress-ng command line that exercises system memory with vm workers.
+     *
+     * @param int $workers        Number of parallel vm workers to start.
+     * @param int $durationSeconds Duration of the run in seconds.
+     * @param int $percentOfRam    Percentage of total RAM to allocate.
+     * @return string Shell command suitable for execution.
+     */
     public function buildCommand(int $workers, int $durationSeconds, int $percentOfRam): string
     {
         $workers = max(1, $workers);
@@ -31,7 +49,8 @@ final class MemoryStressNgRunner
     /**
      * Heuristic throughput parser for stress-ng vm metrics.
      *
-     * @param array<int,string> $lines
+     * @param array<int,string> $lines Raw stress-ng output lines.
+     * @return float|null Best detected MiB/sec value, or null when missing.
      */
     public function parseScore(array $lines): ?float
     {
@@ -80,6 +99,15 @@ final class MemoryStressNgRunner
         return $best;
     }
 
+    /**
+     * Run a stress-ng memory workload and capture its output lines.
+     *
+     * @param int        $workers        Number of parallel vm workers to start.
+     * @param int        $durationSeconds Duration of the run in seconds.
+     * @param int        $percentOfRam    Percentage of total RAM to allocate.
+     * @param int|null   $exitCode        Populated with the stress-ng exit code.
+     * @return array<int,string> Collected output lines from stress-ng.
+     */
     public function run(int $workers, int $durationSeconds, int $percentOfRam, ?int &$exitCode = null): array
     {
         if (!$this->commandExists('stress-ng')) {
@@ -102,4 +130,3 @@ final class MemoryStressNgRunner
         return is_string($result) && trim($result) !== '';
     }
 }
-

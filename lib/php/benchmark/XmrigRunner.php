@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace mcxForge\Benchmark;
 
+/**
+ * XmrigRunner assembles and executes xmrig benchmark runs and parses their
+ * log output into structured hashrate samples suitable for mcxForge scores.
+ */
 final class XmrigRunner
 {
     private const DEFAULT_DURATION_SECONDS = 1800;
@@ -44,6 +48,12 @@ final class XmrigRunner
         ],
     ];
 
+    /**
+     * Build a deterministic log file path for xmrig benchmark runs in /tmp.
+     *
+     * @param \DateTimeImmutable|null $now Optional time source for testability.
+     * @return string Absolute path to the log file.
+     */
     public function buildLogFilePath(?\DateTimeImmutable $now = null): string
     {
         $now = $now ?? new \DateTimeImmutable('now');
@@ -52,13 +62,21 @@ final class XmrigRunner
         return sprintf('/tmp/benchmarkCPUXmrig-%s.log', $date);
     }
 
+    /**
+     * Return the default xmrig benchmark duration in seconds.
+     *
+     * @return int Default duration used when no explicit value is provided.
+     */
     public function getDefaultDurationSeconds(): int
     {
         return self::DEFAULT_DURATION_SECONDS;
     }
 
     /**
-     * @return array{host:string,port:int}
+     * Resolve a mining pool host and port from a short pool name.
+     *
+     * @param string $pool Pool selector such as moneroocean or p2pool.
+     * @return array{host:string,port:int} Resolved pool connection settings.
      */
     public function resolvePool(string $pool): array
     {
@@ -87,6 +105,16 @@ final class XmrigRunner
         throw new \InvalidArgumentException("Unsupported pool '{$pool}'. Use moneroocean, p2pool, or p2pool-mini.");
     }
 
+    /**
+     * Resolve a donation address from an explicit override or beneficiary keyword.
+     *
+     * When no explicit address is provided, a deterministic address is chosen
+     * from the configured beneficiary pool, falling back to the Monero address.
+     *
+     * @param string|null $explicitAddress Explicit donation address override.
+     * @param string      $beneficiary     Beneficiary keyword such as monero or tor.
+     * @return string Resolved donation address.
+     */
     public function resolveBeneficiaryAddress(?string $explicitAddress, string $beneficiary): string
     {
         $candidate = $explicitAddress !== null ? trim($explicitAddress) : '';
@@ -114,6 +142,11 @@ final class XmrigRunner
         return $pool[$index];
     }
 
+    /**
+     * Locate the xmrig binary either via XMRIG_BIN override or PATH discovery.
+     *
+     * @return string Absolute path to the xmrig executable.
+     */
     public function resolveBinaryPath(): string
     {
         $override = getenv('XMRIG_BIN');
@@ -135,6 +168,17 @@ final class XmrigRunner
         throw new \RuntimeException('xmrig executable not found. Install xmrig or set XMRIG_BIN.');
     }
 
+    /**
+     * Build an xmrig command line with pool, address, rig identifier, and timeout.
+     *
+     * @param string      $binaryPath           Path to the xmrig executable.
+     * @param int         $durationSeconds      Benchmark duration in seconds (0 for indefinite).
+     * @param string      $pool                 Pool selector such as moneroocean or p2pool.
+     * @param string|null $explicitAddress      Optional explicit donation address.
+     * @param string      $rigId                Identifier reported to the pool.
+     * @param int         $printIntervalSeconds Interval between status prints in seconds.
+     * @return string Shell command suitable for execution.
+     */
     public function buildCommand(
         string $binaryPath,
         int $durationSeconds,
@@ -183,8 +227,10 @@ final class XmrigRunner
     }
 
     /**
-     * @param array<int,string> $lines
-     * @return array<int,float>
+     * Parse xmrig log lines and collect positive hashrate samples in H/s.
+     *
+     * @param array<int,string> $lines Raw xmrig output lines.
+     * @return array<int,float> Parsed hashrate samples in H/s.
      */
     public function parseHashrateSamples(array $lines): array
     {
@@ -201,7 +247,10 @@ final class XmrigRunner
     }
 
     /**
-     * @param array<int,float> $samples
+     * Compute an average hashrate from parsed samples, ignoring invalid values.
+     *
+     * @param array<int,float> $samples Parsed hashrate samples in H/s.
+     * @return float|null Average hashrate in H/s, or null when no valid samples remain.
      */
     public function computeAverageHashrate(array $samples): ?float
     {

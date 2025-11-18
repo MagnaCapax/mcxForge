@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace mcxForge\Benchmark;
 
 /**
- * GeekbenchRunner
- *
- * Helper for downloading, running, and parsing Geekbench results.
- * This class focuses on orchestration and parsing; callers are responsible
- * for presenting output and handling errors according to mcxForge rails.
+ * GeekbenchRunner manages downloading, running, and parsing Geekbench results
+ * so callers can obtain stable multi-core or single-core scores for benchmarks.
  */
 final class GeekbenchRunner
 {
@@ -21,6 +18,12 @@ final class GeekbenchRunner
         '6' => '6.5.0',
     ];
 
+    /**
+     * Normalise a user-provided major version string to a supported value.
+     *
+     * @param string $arg Raw major version argument, such as \"5\" or \"6\".
+     * @return string Normalised major version, either \"5\" or \"6\".
+     */
     public function resolveMajorVersion(string $arg): string
     {
         $value = trim($arg);
@@ -34,6 +37,12 @@ final class GeekbenchRunner
         throw new \InvalidArgumentException("Unsupported Geekbench major version '{$arg}', use 5 or 6.");
     }
 
+    /**
+     * Resolve the concrete Geekbench version string, honouring environment overrides.
+     *
+     * @param string $major Major version selector, usually \"5\" or \"6\".
+     * @return string Resolved version string such as \"6.5.0\".
+     */
     public function resolveVersionString(string $major): string
     {
         $major = $this->resolveMajorVersion($major);
@@ -52,6 +61,12 @@ final class GeekbenchRunner
         return self::DEFAULT_VERSION_BY_MAJOR[$major];
     }
 
+    /**
+     * Build the download URL for a given Geekbench version.
+     *
+     * @param string $versionString Concrete version string such as \"6.5.0\".
+     * @return string HTTPS URL for the Geekbench tarball.
+     */
     public function buildDownloadUrl(string $versionString): string
     {
         $major = $this->determineMajorFromVersionString($versionString);
@@ -72,16 +87,34 @@ final class GeekbenchRunner
         );
     }
 
+    /**
+     * Build the base installation directory for a Geekbench version.
+     *
+     * @param string $versionString Concrete version string such as \"6.5.0\".
+     * @return string Absolute path under /opt where Geekbench is unpacked.
+     */
     public function buildBaseDirectory(string $versionString): string
     {
         return sprintf('/opt/Geekbench-%s-Linux', $versionString);
     }
 
+    /**
+     * Build the tarball path under /tmp for a Geekbench download.
+     *
+     * @param string $versionString Concrete version string such as \"6.5.0\".
+     * @return string Absolute path to the tarball in /tmp.
+     */
     public function buildTarballPath(string $versionString): string
     {
         return sprintf('/tmp/Geekbench-%s-Linux.tar.gz', $versionString);
     }
 
+    /**
+     * Determine the major version (5 or 6) from a full version string.
+     *
+     * @param string $versionString Concrete version string such as \"6.5.0\".
+     * @return string Normalised major version, defaulting to \"6\" on ambiguity.
+     */
     public function determineMajorFromVersionString(string $versionString): string
     {
         $trimmed = trim($versionString);
@@ -102,6 +135,7 @@ final class GeekbenchRunner
     /**
      * Ensure the Geekbench binary exists on disk, downloading and extracting it if needed.
      *
+     * @param string $versionString Concrete version string such as \"6.5.0\".
      * @return string Absolute path to the executable.
      */
     public function ensureBinary(string $versionString): string
@@ -142,9 +176,12 @@ final class GeekbenchRunner
     }
 
     /**
-     * @param string   $url
-     * @param string   $tarball
-     * @param string   $baseDir
+     * Download the Geekbench tarball and extract it into the target directory.
+     *
+     * @param string $url     Download URL for the tarball.
+     * @param string $tarball Absolute path where the tarball is stored.
+     * @param string $baseDir Target directory under /opt for extraction.
+     * @return void
      */
     private function downloadAndExtract(string $url, string $tarball, string $baseDir): void
     {
@@ -231,7 +268,10 @@ final class GeekbenchRunner
     }
 
     /**
-     * @return string|null
+     * Discover a Geekbench binary under the base directory when names are non-standard.
+     *
+     * @param string $baseDir Base directory where Geekbench files are stored.
+     * @return string|null Absolute path to the executable, or null when missing.
      */
     private function discoverFallbackBinary(string $baseDir): ?string
     {
@@ -258,9 +298,11 @@ final class GeekbenchRunner
     }
 
     /**
-     * @param string   $binaryPath
-     * @param int|null $exitCode
-     * @return array<int,string>
+     * Run the Geekbench binary and collect its output lines.
+     *
+     * @param string   $binaryPath Absolute path to the Geekbench executable.
+     * @param int|null $exitCode   Populated with the Geekbench exit code.
+     * @return array<int,string> Collected output lines from the benchmark.
      */
     public function runBinary(string $binaryPath, ?int &$exitCode = null): array
     {
@@ -277,7 +319,9 @@ final class GeekbenchRunner
     /**
      * Parse Geekbench output and extract a single representative score.
      *
-     * @param array<int,string> $lines
+     * @param array<int,string> $lines Raw Geekbench output lines.
+     * @param string            $major Major version selector, usually \"5\" or \"6\".
+     * @return int|null Parsed multi-core or single-core score, or null on failure.
      */
     public function parseScore(array $lines, string $major): ?int
     {
@@ -330,6 +374,13 @@ final class GeekbenchRunner
         return (int)$digitsOnly;
     }
 
+    /**
+     * Build a deterministic log file path for Geekbench runs in /tmp.
+     *
+     * @param string                 $major Major version selector, usually "5" or "6".
+     * @param \DateTimeImmutable|null $now  Optional time source for testability.
+     * @return string Absolute path to the log file.
+     */
     public function buildLogFilePath(string $major, ?\DateTimeImmutable $now = null): string
     {
         $major = $this->resolveMajorVersion($major);

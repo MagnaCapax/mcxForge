@@ -1,4 +1,4 @@
-# ADR-000X: <Title>
+# ADR-0000: ADR Template
 
 > This ADR template and the mcxForge ADR rails were initially authored by Aleksi Ursin. New ADRs must follow this structure and metadata conventions.
 
