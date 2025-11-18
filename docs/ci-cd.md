@@ -4,7 +4,7 @@ This repository keeps its testing suite in-tree so local runs and CI share the s
 
 ## Overview
 
-- Orchestrator: `development/testing/test.sh` – tool checks → PHP lint → storage parser tests → shell lint → static analysis (PHPStan) → LOC snapshot.
+- Orchestrator: `development/testing/test.sh` – tool checks → PHP lint → PHP dev tests (storage parsers) → naming/docblock/Doctrine lints → shell lint → static analysis (PHPStan) → ADR/author/license checks → LOC snapshot.
 - CI: `.github/workflows/ci.yml` runs `development/testing/test.sh` on push/PR.
 - Optional assistant integration: `development/cli/ci.sh` and `development/cli/ci-codex.sh` can assemble CI context and prompt text for a coding assistant.
 

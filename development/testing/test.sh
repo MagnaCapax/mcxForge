@@ -23,19 +23,28 @@ else
   echo "TODO: add tests under development/tests/development/"
 fi
 
-echo "3) Shell script lint"
+echo "3) PHP naming lint"
+bash "$DEV_DIR/testing/camelcase-lint.sh"
+
+echo "4) PHP docblock lint"
+bash "$DEV_DIR/testing/docblock-lint.sh"
+
+echo "5) Doctrine lint"
+bash "$DEV_DIR/testing/doctrine-lint.sh"
+
+echo "6) Shell script lint"
 bash "$DEV_DIR/testing/shell-lint.sh" || echo "Shell lint skipped or failed (see output above)"
 
-echo "4) Static analysis (phpstan)"
+echo "7) Static analysis (phpstan)"
 PHPSTAN_DISABLE_PARALLEL=1 bash "$DEV_DIR/testing/phpstan.sh" || echo "phpstan skipped or failed (see output above)"
 
-echo "5) ADR metadata checks"
+echo "8) ADR metadata checks"
 bash "$DEV_DIR/testing/adr-lint.sh"
 
-echo "6) Author metadata checks"
+echo "9) Author metadata checks"
 bash "$DEV_DIR/testing/author-lint.sh"
 
-echo "7) License checks"
+echo "10) License checks"
 bash "$DEV_DIR/testing/copyright-lint.sh"
 
 echo "All tests completed"

@@ -3,7 +3,7 @@
 Current automated checks live under `development/testing/` so local runs and CI use the same entrypoints.
 
 ## Available Scripts
-- `development/testing/test.sh` – orchestrates tool checks, PHP lint, storage parser tests, shell lint, static analysis, and a LOC snapshot.
+- `development/testing/test.sh` – orchestrates tool checks, PHP lint, PHP dev tests (storage parsers), naming/docblock/Doctrine lints, shell lint, static analysis, ADR/author/license checks, and a LOC snapshot.
 - `development/testing/php-lint.sh` – wraps `php -l` over the repository.
 - `development/testing/shell-lint.sh` – runs `bash -n` and `shellcheck` over `*.sh` scripts when available.
 - `development/testing/phpstan.sh` – runs PHPStan (honours `PHPSTAN_DISABLE_PARALLEL=1`).
@@ -40,4 +40,4 @@ TEST_VERBOSE=1 development/testing/test.sh
 ## Direction
 
 - As mcxForge grows, additional tests (for new entrypoints and libraries) should be added under `development/tests/` and wired into `development/testing/test.sh`.
-- More opinionated checks (docblock/ADR metadata, naming conventions, etc.) can be introduced here once the repository structure stabilizes.
+- Opinionated checks (docblock/ADR metadata, naming conventions, etc.) are now part of the default workflow; further checks can be introduced here once the repository structure stabilizes.

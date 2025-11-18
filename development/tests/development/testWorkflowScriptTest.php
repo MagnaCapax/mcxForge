@@ -25,8 +25,14 @@ final class testWorkflowScriptTest extends testCase
         $this->assertTrue(strpos($script, '0) Tool checks') !== false);
         $this->assertTrue(strpos($script, '1) PHP lint') !== false);
         $this->assertTrue(strpos($script, '2) PHP dev tests') !== false);
-        $this->assertTrue(strpos($script, '3) Shell script lint') !== false);
-        $this->assertTrue(strpos($script, '4) Static analysis (phpstan)') !== false);
+        $this->assertTrue(strpos($script, '3) PHP naming lint') !== false);
+        $this->assertTrue(strpos($script, '4) PHP docblock lint') !== false);
+        $this->assertTrue(strpos($script, '5) Doctrine lint') !== false);
+        $this->assertTrue(strpos($script, '6) Shell script lint') !== false);
+        $this->assertTrue(strpos($script, '7) Static analysis (phpstan)') !== false);
+        $this->assertTrue(strpos($script, '8) ADR metadata checks') !== false);
+        $this->assertTrue(strpos($script, '9) Author metadata checks') !== false);
+        $this->assertTrue(strpos($script, '10) License checks') !== false);
         $this->assertTrue(strpos($script, 'LOC snapshot') !== false);
     }
 
@@ -36,6 +42,9 @@ final class testWorkflowScriptTest extends testCase
 
         $this->assertTrue(strpos($script, 'check-tools.sh') !== false);
         $this->assertTrue(strpos($script, 'php-lint.sh') !== false);
+        $this->assertTrue(strpos($script, 'camelcase-lint.sh') !== false);
+        $this->assertTrue(strpos($script, 'docblock-lint.sh') !== false);
+        $this->assertTrue(strpos($script, 'doctrine-lint.sh') !== false);
         $this->assertTrue(strpos($script, 'shell-lint.sh') !== false);
         $this->assertTrue(strpos($script, 'phpstan.sh') !== false);
         $this->assertTrue(strpos($script, 'loc.sh') !== false);
@@ -67,4 +76,3 @@ final class testWorkflowScriptTest extends testCase
         $this->assertTrue(strpos($script, 'Docs other') !== false);
     }
 }
-
