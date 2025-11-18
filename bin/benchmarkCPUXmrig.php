@@ -33,23 +33,28 @@ if (!defined('EXIT_ERROR')) {
 require_once __DIR__ . '/../lib/php/benchmark/CPUInfo.php';
 require_once __DIR__ . '/../lib/php/benchmark/XmrigRunner.php';
 require_once __DIR__ . '/../lib/php/Logger.php';
+require_once __DIR__ . '/../lib/php/Cli.php';
 
-\mcxForge\Logger::initStreamLogging();
+use mcxForge\Cli;
+use mcxForge\Logger;
 
 use mcxForge\Benchmark\CPUInfo;
 use mcxForge\Benchmark\XmrigRunner;
 
 function benchmarkCPUXmrigMain(array $argv): int
 {
+    Logger::initStreamLogging();
+
     [$duration, $pool, $address, $scoreOnly, $colorEnabled] = benchmarkCPUXmrigParseArguments($argv);
 
     $runner = new XmrigRunner();
     $logFile = $runner->buildLogFilePath();
 
-    $titleColor = $colorEnabled ? "\033[1;34m" : '';
-    $scoreColor = $colorEnabled ? "\033[1;32m" : '';
-    $errorColor = $colorEnabled ? "\033[1;31m" : '';
-    $resetColor = $colorEnabled ? "\033[0m" : '';
+    $colors = Cli::colors($colorEnabled);
+    $titleColor = $colors['title'];
+    $scoreColor = $colors['ok'];
+    $errorColor = $colors['error'];
+    $resetColor = $colors['reset'];
 
     if (!$scoreOnly) {
         $modeLabel = $duration > 0
@@ -86,15 +91,12 @@ function benchmarkCPUXmrigMain(array $argv): int
     try {
         $binaryPath = $runner->resolveBinaryPath();
     } catch (\Throwable $e) {
-        fwrite(
-            STDERR,
-            sprintf(
-                "%s[benchmarkCPUXmrig] Error: %s%s\n",
-                $errorColor,
-                $e->getMessage(),
-                $resetColor
-            )
-        );
+        Logger::logStderr(sprintf(
+            "%s[benchmarkCPUXmrig] Error: %s%s\n",
+            $errorColor,
+            $e->getMessage(),
+            $resetColor
+        ));
         return EXIT_ERROR;
     }
 
@@ -112,14 +114,11 @@ function benchmarkCPUXmrigMain(array $argv): int
 
     if ($average === null) {
         if (!$scoreOnly) {
-            fwrite(
-                STDERR,
-                sprintf(
-                    "%s[benchmarkCPUXmrig] Warning: could not parse xmrig hashrate from output%s\n",
-                    $errorColor,
-                    $resetColor
-                )
-            );
+            Logger::logStderr(sprintf(
+                "%s[benchmarkCPUXmrig] Warning: could not parse xmrig hashrate from output%s\n",
+                $errorColor,
+                $resetColor
+            ));
         }
 
         return EXIT_ERROR;
@@ -152,22 +151,19 @@ function benchmarkCPUXmrigMain(array $argv): int
             )
         );
         if ($exitCode !== 0) {
-            fwrite(
-                STDERR,
-                sprintf(
-                    "%s[benchmarkCPUXmrig] xmrig exited with code %d (timeout or error)%s\n",
-                    $errorColor,
-                    $exitCode,
-                    $resetColor
-                )
-            );
+            Logger::logStderr(sprintf(
+                "%s[benchmarkCPUXmrig] xmrig exited with code %d (timeout or error)%s\n",
+                $errorColor,
+                $exitCode,
+                $resetColor
+            ));
         }
     }
 
     $payload = benchmarkCPUXmrigBuildScorePayload($average, $perThread, $threads, $duration, $logFile);
     $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($json === false) {
-        \mcxForge\Logger::logStderr("[benchmarkCPUXmrig] Failed to encode JSON score payload\n");
+        Logger::logStderr("[benchmarkCPUXmrig] Failed to encode JSON score payload\n");
         return EXIT_ERROR;
     }
 
@@ -186,41 +182,30 @@ function benchmarkCPUXmrigParseArguments(array $argv): array
     $pool = 'moneroocean';
     $address = null;
     $scoreOnly = false;
-    $colorEnabled = true;
-
-    if (getenv('NO_COLOR') !== false) {
-        $colorEnabled = false;
-    }
+    $colorEnabled = Cli::defaultColorEnabled();
 
     $args = $argv;
     array_shift($args);
 
+    $args = Cli::consumeCommonFlags(
+        $args,
+        'benchmarkCPUXmrigPrintHelp',
+        $scoreOnly,
+        $colorEnabled
+    );
+
     foreach ($args as $arg) {
-        if ($arg === '--help' || $arg === '-h') {
-            benchmarkCPUXmrigPrintHelp();
-            exit(EXIT_OK);
-        }
-
-        if ($arg === '--score-only') {
-            $scoreOnly = true;
-            continue;
-        }
-
-        if ($arg === '--no-color') {
-            $colorEnabled = false;
-            continue;
-        }
 
         if (str_starts_with($arg, '--duration=')) {
             $value = substr($arg, strlen('--duration='));
             $value = trim($value);
             if (!ctype_digit($value)) {
-                \mcxForge\Logger::logStderr("Error: invalid --duration value '{$value}'\n");
+                Logger::logStderr("Error: invalid --duration value '{$value}'\n");
                 exit(EXIT_ERROR);
             }
             $duration = (int) $value;
             if ($duration < 0) {
-                \mcxForge\Logger::logStderr("Error: --duration must be >= 0\n");
+                Logger::logStderr("Error: --duration must be >= 0\n");
                 exit(EXIT_ERROR);
             }
             continue;
@@ -230,7 +215,7 @@ function benchmarkCPUXmrigParseArguments(array $argv): array
             $value = substr($arg, strlen('--pool='));
             $value = trim($value);
             if ($value === '') {
-                \mcxForge\Logger::logStderr("Error: --pool must not be empty\n");
+                Logger::logStderr("Error: --pool must not be empty\n");
                 exit(EXIT_ERROR);
             }
             $pool = $value;
@@ -241,14 +226,14 @@ function benchmarkCPUXmrigParseArguments(array $argv): array
             $value = substr($arg, strlen('--address='));
             $value = trim($value);
             if ($value === '') {
-                \mcxForge\Logger::logStderr("Error: --address must not be empty when provided\n");
+                Logger::logStderr("Error: --address must not be empty when provided\n");
                 exit(EXIT_ERROR);
             }
             $address = $value;
             continue;
         }
 
-        \mcxForge\Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
+        Logger::logStderr("Error: unrecognized argument '{$arg}'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 
