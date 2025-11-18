@@ -6,9 +6,7 @@
   "require": {
   },
   "require-dev": {
-    "phpstan/phpstan": "^1.11",
-    "phploc/phploc": "^7.0",
-    "phpmd/phpmd": "^2.15"
+    "phpstan/phpstan": "^1.11"
   },
   "autoload": {
     "psr-4": {
