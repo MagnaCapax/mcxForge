@@ -51,3 +51,28 @@ prioritized and carved into focused ADRs and implementation steps later.
 - Explore rotating JSONL logs for benchmark runs under `/tmp/` or a
   configurable mcxForge state directory, keeping retention small but useful
   for forensic analysis.
+
+## Naming Cleanup
+
+- Revisit ADR-0002 in light of evolving expectations:
+  - Confirm that for PHP we want:
+    - Class names: lowerCamelCase or a consistent, agreed style.
+    - File names: match class names closely (no snake_case).
+    - Avoid new `*Runner` suffixes unless they carry a clear meaning that
+      adds value (for example, orchestration vs. pure value object).
+  - Avoid introducing:
+    - snake_case for PHP class names or filenames.
+    - PascalCase / StudlyCaps for new symbols if we decide on a
+      lowerCamelCase convention.
+    - Any exotic casing schemes (no \"FantasyLand\" style or other
+      non-standard variants).
+
+- Plan a dedicated cleanup pass once the benchmark surface stabilizes:
+  - Inventory existing classes under `lib/php/` and decide renames where
+    they materially improve clarity (e.g., collapsing redundant `Runner`
+    suffixes).
+  - Update naming lint rules to enforce:
+    - LowerCamelCase for new PHP symbols as agreed.
+    - Consistent mapping between filenames and class names.
+  - Ensure changes are strictly mechanical and covered by tests to avoid
+    surprises during refactors.
