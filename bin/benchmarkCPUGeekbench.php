@@ -100,11 +100,22 @@ function benchmarkGeekbenchMain(array $argv): int
         fwrite(
             STDERR,
             sprintf(
-                "%s[benchmarkGeekbench] Warning: could not parse Geekbench score%s\n",
+                "%s[benchmarkGeekbench] Warning: could not parse Geekbench score (see %s)%s\n",
                 $errorColor,
+                $logFile,
                 $resetColor
             )
         );
+        $tail = array_slice($outputLines, -10);
+        foreach ($tail as $line) {
+            fwrite(
+                STDERR,
+                sprintf(
+                    "[benchmarkGeekbench][tail] %s\n",
+                    rtrim($line, "\r\n")
+                )
+            );
+        }
         return EXIT_ERROR;
     }
 

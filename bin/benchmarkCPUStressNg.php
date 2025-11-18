@@ -68,13 +68,22 @@ function benchmarkCPUStressNgMain(array $argv): int
 
     $score = $runner->parseScore($lines);
     if ($score === null) {
-        if (!$scoreOnly) {
+        fwrite(
+            STDERR,
+            sprintf(
+                "%s[benchmarkCPUStressNg] Warning: could not parse stress-ng bogo ops/s (see %s)%s\n",
+                $errorColor,
+                $logFile,
+                $resetColor
+            )
+        );
+        $tail = array_slice($lines, -10);
+        foreach ($tail as $line) {
             fwrite(
                 STDERR,
                 sprintf(
-                    "%s[benchmarkCPUStressNg] Warning: could not parse stress-ng bogo ops/s%s\n",
-                    $errorColor,
-                    $resetColor
+                    "[benchmarkCPUStressNg][tail] %s\n",
+                    rtrim($line, "\r\n")
                 )
             );
         }

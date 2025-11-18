@@ -118,7 +118,7 @@ function benchmarkCPUSysbenchMain(array $argv): int
  */
 function benchmarkCPUSysbenchParseArguments(array $argv): array
 {
-    $duration = 60;
+    $duration = 120;
     $threads = CPUInfo::detectLogicalCores();
     $scoreOnly = false;
     $colorEnabled = true;
@@ -185,7 +185,7 @@ Run a CPU benchmark using sysbench cpu, log output under /tmp, and emit a normal
   {{SCORE:<events_per_second_per_thread>}}
 
 Options:
-  --duration=SECONDS  Run time for sysbench (default: 60).
+  --duration=SECONDS  Run time for sysbench (default: 120).
   --threads=N         Number of worker threads to use (default: detected logical cores).
   --score-only        Print only the SCORE line, nothing else.
   --no-color          Disable ANSI colors in human output.
