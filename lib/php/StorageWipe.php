@@ -341,6 +341,22 @@ final class StorageWipeRunner
     }
 
     /**
+     * @param array<string,mixed> $node
+     * @return array<int,array<string,mixed>>
+     */
+    private static function getChildNodes(array $node): array
+    {
+        if (!isset($node['children']) || !is_array($node['children'])) {
+            return [];
+        }
+
+        /** @var array<int,array<string,mixed>> $children */
+        $children = $node['children'];
+
+        return $children;
+    }
+
+    /**
      * @param array<string,int> $targetSet
      * @param array<int,array<string,mixed>> $arraysToStop
      */
@@ -371,12 +387,8 @@ final class StorageWipeRunner
             ];
         }
 
-        if (isset($node['children']) && is_array($node['children'])) {
-            /** @var array<int,array<string,mixed>> $children */
-            $children = $node['children'];
-            foreach ($children as $child) {
-                self::collectMdArraysFromNode($child, $targetSet, $arraysToStop);
-            }
+        foreach (self::getChildNodes($node) as $child) {
+            self::collectMdArraysFromNode($child, $targetSet, $arraysToStop);
         }
     }
 
@@ -399,12 +411,8 @@ final class StorageWipeRunner
             $mountpoints[] = $mount;
         }
 
-        if (isset($node['children']) && is_array($node['children'])) {
-            /** @var array<int,array<string,mixed>> $children */
-            $children = $node['children'];
-            foreach ($children as $child) {
-                self::collectDisksAndMountpoints($child, $disks, $mountpoints);
-            }
+        foreach (self::getChildNodes($node) as $child) {
+            self::collectDisksAndMountpoints($child, $disks, $mountpoints);
         }
     }
 
@@ -517,14 +525,10 @@ final class StorageWipeRunner
             }
         }
 
-        if (isset($node['children']) && is_array($node['children'])) {
-            /** @var array<int,array<string,mixed>> $children */
-            $children = $node['children'];
-            foreach ($children as $child) {
-                $candidate = self::findRootDiskInTopologyNode($child);
-                if ($candidate !== null) {
-                    return $candidate;
-                }
+        foreach (self::getChildNodes($node) as $child) {
+            $candidate = self::findRootDiskInTopologyNode($child);
+            if ($candidate !== null) {
+                return $candidate;
             }
         }
 
