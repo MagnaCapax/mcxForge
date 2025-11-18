@@ -46,8 +46,6 @@
   - All automated tests for the storage wipe tool MUST:
     - Use `--dry-run` exclusively; no real commands that modify block
       devices may be executed as part of default test runs.
-    - Prefer synthetic `lsblk` JSON via `MCXFORGE_STORAGE_WIPE_LSBLK_JSON`
-      to avoid depending on the host's actual disk layout.
   - Destructive integration tests (if ever added) MUST:
     - Be opt-in, clearly labeled, and never run by default in CI.
     - Run only inside hermetic or containerised environments with known

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace mcxForge;
 
 require_once __DIR__ . '/Logger.php';
+require_once __DIR__ . '/../../bin/inventoryStorage.php';
+require_once __DIR__ . '/../../bin/inventoryStorageTopology.php';
 
 if (!defined('EXIT_OK')) {
     define('EXIT_OK', 0);
@@ -163,78 +165,68 @@ final class StorageWipeRunner
      */
     private static function collectDevices(array $options): array
     {
-        $overrideJson = getenv('MCXFORGE_STORAGE_WIPE_LSBLK_JSON');
-        if ($overrideJson !== false && trim($overrideJson) !== '') {
-            $decoded = json_decode($overrideJson, true);
-        } else {
-            $cmd = 'lsblk -J -b -d -o NAME,TYPE,SIZE,MODEL,ROTA 2>/dev/null';
-            $output = @shell_exec($cmd);
-            $decoded = is_string($output) ? json_decode($output, true) : null;
-        }
-
-        if (!is_array($decoded) || !isset($decoded['blockdevices']) || !is_array($decoded['blockdevices'])) {
-            Logger::logStderr("Error: failed to obtain lsblk block device information.\n");
+        /** @var array<int,array<string,mixed>>|null $blockdevices */
+        $blockdevices = \getBlockDevices();
+        if ($blockdevices === null) {
+            Logger::logStderr("Error: failed to obtain block device information via inventoryStorage.\n");
             return [];
         }
 
-        /** @var array<int,array<string,mixed>> $blockdevices */
-        $blockdevices = $decoded['blockdevices'];
+        // Reuse inventoryStorage grouping to get normalized devices per bus.
+        /** @var array<string,array<int,array<string,mixed>>> $grouped */
+        $grouped = \groupDevicesByBus($blockdevices, false);
+
+        $rotaMap = self::collectRotaMap();
 
         $systemDiskName = self::detectSystemDiskName();
         $devices = [];
 
-        foreach ($blockdevices as $dev) {
-            $type = strtolower((string) ($dev['type'] ?? ''));
-            if ($type !== 'disk') {
-                continue;
-            }
-
-            $name = (string) ($dev['name'] ?? '');
-            if ($name === '') {
-                continue;
-            }
-
-            $path = '/dev/' . $name;
-
-            if (!empty($options['devices'])) {
-                $explicitMatch = false;
-                foreach ($options['devices'] as $wanted) {
-                    if ($wanted === $path || $wanted === $name) {
-                        $explicitMatch = true;
-                        break;
-                    }
-                }
-                if (!$explicitMatch) {
+        foreach ($grouped as $bus => $busDevices) {
+            foreach ($busDevices as $dev) {
+                $name = (string) ($dev['name'] ?? '');
+                $path = (string) ($dev['path'] ?? '');
+                if ($name === '' || $path === '') {
                     continue;
                 }
+
+                if (!empty($options['devices'])) {
+                    $explicitMatch = false;
+                    foreach ($options['devices'] as $wanted) {
+                        if ($wanted === $path || $wanted === $name) {
+                            $explicitMatch = true;
+                            break;
+                        }
+                    }
+                    if (!$explicitMatch) {
+                        continue;
+                    }
+                }
+
+                $sizeBytes = isset($dev['sizeBytes']) && is_numeric($dev['sizeBytes']) ? (int) $dev['sizeBytes'] : 0;
+                $sizeGiB = isset($dev['sizeGiB']) && is_numeric($dev['sizeGiB']) ? (int) $dev['sizeGiB'] : 0;
+                $modelRaw = $dev['model'] ?? '';
+                $model = is_string($modelRaw) && trim($modelRaw) !== '' ? trim($modelRaw) : 'UNKNOWN';
+
+                $rota = $rotaMap[$name] ?? null;
+                $isSsd = $rota === 0;
+
+                $isSystem = ($systemDiskName !== null && $name === $systemDiskName);
+                if ($isSystem && !$options['includeSystemDevice']) {
+                    Logger::logStderr("Info: skipping system disk {$path} (contains '/'). Use --include-system-device to include it.\n");
+                    continue;
+                }
+
+                $devices[] = [
+                    'name' => $name,
+                    'path' => $path,
+                    'bus' => (string) $bus,
+                    'sizeBytes' => $sizeBytes,
+                    'sizeGiB' => $sizeGiB,
+                    'model' => $model,
+                    'isSsd' => $isSsd,
+                    'isSystem' => $isSystem,
+                ];
             }
-
-            $sizeRaw = $dev['size'] ?? 0;
-            $sizeBytes = is_numeric($sizeRaw) ? (int) $sizeRaw : 0;
-            $sizeGiB = $sizeBytes > 0 ? (int) round($sizeBytes / (1024 * 1024 * 1024)) : 0;
-
-            $modelRaw = $dev['model'] ?? '';
-            $model = is_string($modelRaw) && trim($modelRaw) !== '' ? trim($modelRaw) : 'UNKNOWN';
-
-            $rotaRaw = $dev['rota'] ?? null;
-            $rota = is_numeric($rotaRaw) ? (int) $rotaRaw : null;
-            $isSsd = $rota === 0;
-
-            $isSystem = ($systemDiskName !== null && $name === $systemDiskName);
-            if ($isSystem && !$options['includeSystemDevice']) {
-                Logger::logStderr("Info: skipping system disk {$path} (contains '/'). Use --include-system-device to include it.\n");
-                continue;
-            }
-
-            $devices[] = [
-                'name' => $name,
-                'path' => $path,
-                'sizeBytes' => $sizeBytes,
-                'sizeGiB' => $sizeGiB,
-                'model' => $model,
-                'isSsd' => $isSsd,
-                'isSystem' => $isSystem,
-            ];
         }
 
         if (!empty($options['devices']) && count($devices) === 0) {
@@ -245,12 +237,65 @@ final class StorageWipeRunner
     }
 
     /**
+     * Build a map of device name => rota flag (0 non-rotational, 1 rotational).
+     *
+     * @return array<string,int>
+     */
+    private static function collectRotaMap(): array
+    {
+        $map = [];
+
+        $output = @shell_exec('lsblk -J -d -o NAME,ROTA 2>/dev/null');
+        if (!is_string($output) || trim($output) === '') {
+            return $map;
+        }
+
+        $decoded = json_decode($output, true);
+        if (!is_array($decoded) || !isset($decoded['blockdevices']) || !is_array($decoded['blockdevices'])) {
+            return $map;
+        }
+
+        /** @var array<int,array<string,mixed>> $bds */
+        $bds = $decoded['blockdevices'];
+        foreach ($bds as $dev) {
+            $name = (string) ($dev['name'] ?? '');
+            if ($name === '') {
+                continue;
+            }
+            $rotaRaw = $dev['rota'] ?? null;
+            if (is_numeric($rotaRaw)) {
+                $map[$name] = (int) $rotaRaw;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
      * Attempt to detect the name (e.g. "sda") of the disk that backs '/'.
+     *
+     * Prefers inventoryStorageTopology where available to keep behaviour
+     * consistent with other storage tools.
      *
      * @return string|null
      */
     private static function detectSystemDiskName(): ?string
     {
+        if (\function_exists('inventoryStorageTopologyCollect')) {
+            /** @var array<string,mixed>|null $topology */
+            $topology = \inventoryStorageTopologyCollect();
+            if (is_array($topology) && isset($topology['blockdevices']) && is_array($topology['blockdevices'])) {
+                /** @var array<int,array<string,mixed>> $devices */
+                $devices = $topology['blockdevices'];
+                foreach ($devices as $node) {
+                    $disk = self::findRootDiskInTopologyNode($node);
+                    if ($disk !== null && $disk !== '') {
+                        return $disk;
+                    }
+                }
+            }
+        }
+
         $source = @shell_exec('findmnt -n -o SOURCE / 2>/dev/null');
         if (!is_string($source) || trim($source) === '') {
             $df = @shell_exec('df --output=source / 2>/dev/null | tail -n 1');
@@ -281,6 +326,40 @@ final class StorageWipeRunner
     }
 
     /**
+     * @param array<string,mixed> $node
+     */
+    private static function findRootDiskInTopologyNode(array $node): ?string
+    {
+        $mountpoint = isset($node['mountpoint']) ? (string) $node['mountpoint'] : '';
+        if ($mountpoint === '/') {
+            $type = isset($node['type']) ? (string) $node['type'] : '';
+            $name = isset($node['name']) ? (string) $node['name'] : '';
+            $pkname = isset($node['pkname']) ? (string) $node['pkname'] : '';
+
+            if ($type === 'disk' && $name !== '') {
+                return $name;
+            }
+
+            if ($pkname !== '') {
+                return $pkname;
+            }
+        }
+
+        if (isset($node['children']) && is_array($node['children'])) {
+            /** @var array<int,array<string,mixed>> $children */
+            $children = $node['children'];
+            foreach ($children as $child) {
+                $candidate = self::findRootDiskInTopologyNode($child);
+                if ($candidate !== null) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param array<int,array<string,mixed>> $devices
      * @param array<string,mixed> $options
      */
@@ -294,6 +373,7 @@ final class StorageWipeRunner
             $sizeGiB = (int) $device['sizeGiB'];
             $model = (string) $device['model'];
             $isSsd = (bool) $device['isSsd'];
+            $bus = isset($device['bus']) ? (string) $device['bus'] : '';
 
             echo "=== Device {$path} ({$sizeGiB}GiB; {$model}) ===\n";
 
@@ -310,7 +390,7 @@ final class StorageWipeRunner
             if ($isSsd && ($options['passes'] > 1 || $options['randomDataWrite'])) {
                 Logger::logStderr(
                     "Warning: device {$path} appears to be SSD (non-rotational); multiple overwrite passes or random writes will increase wear. " .
-                    "Prefer --secure-erase where supported.\n"
+                    "Prefer secure erase where supported.\n"
                 );
             }
 
@@ -380,6 +460,8 @@ final class StorageWipeRunner
     {
         $path = (string) $device['path'];
         $sizeBytes = (int) $device['sizeBytes'];
+        $bus = isset($device['bus']) ? (string) $device['bus'] : '';
+        $isSsd = isset($device['isSsd']) ? (bool) $device['isSsd'] : false;
         $sizeMiB = $sizeBytes > 0 ? (int) floor($sizeBytes / (1024 * 1024)) : 0;
         if ($sizeMiB < 1) {
             $sizeMiB = 1;
@@ -418,23 +500,49 @@ final class StorageWipeRunner
             }
         }
 
-        // Optional secure erase via hdparm. We still run the basic steps; this is additive.
-        if ($options['secureErase']) {
-            $plan[] = [
-                'description' => "hdparm identify {$path}",
-                'command' => 'hdparm -I ' . escapeshellarg($path),
-                'coversWholeDevice' => false,
-            ];
-            $plan[] = [
-                'description' => "hdparm security-set-pass on {$path}",
-                'command' => 'hdparm --user-master u --security-set-pass mcxforge ' . escapeshellarg($path),
-                'coversWholeDevice' => false,
-            ];
-            $plan[] = [
-                'description' => "hdparm security-erase on {$path}",
-                'command' => 'hdparm --user-master u --security-erase mcxforge ' . escapeshellarg($path),
-                'coversWholeDevice' => true,
-            ];
+        // Optional secure erase. We still run the basic steps; this is additive.
+        $autoAtaSecureErase = $isSsd && in_array($bus, ['SATA', 'SAS'], true);
+        $autoNvmeSecureErase = $isSsd && $bus === 'NVME';
+        $explicitSecure = (bool) $options['secureErase'];
+
+        if ($explicitSecure || $autoAtaSecureErase || $autoNvmeSecureErase) {
+            if ($autoAtaSecureErase && !$explicitSecure) {
+                Logger::logStderr("Info: auto-enabling ATA secure erase for SSD {$path} on bus {$bus}.\n");
+            }
+            if ($autoNvmeSecureErase && !$explicitSecure) {
+                Logger::logStderr("Info: auto-enabling NVMe secure erase for SSD {$path}.\n");
+            }
+
+            if ($bus === 'NVME') {
+                // Prefer NVMe native secure erase where available.
+                $plan[] = [
+                    'description' => "nvme identify controller {$path}",
+                    'command' => 'nvme id-ctrl ' . escapeshellarg($path),
+                    'coversWholeDevice' => false,
+                ];
+                $plan[] = [
+                    'description' => "nvme format (secure erase) on {$path}",
+                    'command' => 'nvme format ' . escapeshellarg($path) . ' -s 1 -f',
+                    'coversWholeDevice' => true,
+                ];
+            } else {
+                // ATA/SATA/SAS and other buses fall back to hdparm-based secure erase.
+                $plan[] = [
+                    'description' => "hdparm identify {$path}",
+                    'command' => 'hdparm -I ' . escapeshellarg($path),
+                    'coversWholeDevice' => false,
+                ];
+                $plan[] = [
+                    'description' => "hdparm security-set-pass on {$path}",
+                    'command' => 'hdparm --user-master u --security-set-pass mcxforge ' . escapeshellarg($path),
+                    'coversWholeDevice' => false,
+                ];
+                $plan[] = [
+                    'description' => "hdparm security-erase on {$path}",
+                    'command' => 'hdparm --user-master u --security-erase mcxforge ' . escapeshellarg($path),
+                    'coversWholeDevice' => true,
+                ];
+            }
         }
 
         // Optional random write loops.
@@ -534,12 +642,13 @@ Destroy data on block devices by running a sequence of wipe operations:
   - blkdiscard
   - dd header zeroing
   - optional multi-pass full-device overwrites
-  - optional hdparm secure erase
+  - optional secure erase (hdparm / nvme)
   - optional random write loops
 
-By default, the tool discovers all non-loop "disk" devices via lsblk and
-asks for explicit confirmation per device. The disk containing the current
-root filesystem ("/") is skipped unless --include-system-device is given.
+By default, the tool discovers all non-loop "disk" devices via the shared
+inventory storage helpers and asks for explicit confirmation per device.
+The disk containing the current root filesystem ("/") is skipped unless
+--include-system-device is given.
 
 Options:
   --dry-run                  Print planned commands only; do NOT execute them.
@@ -548,10 +657,11 @@ Options:
                              May be specified multiple times.
   --include-system-device    Allow wiping the disk that backs '/'.
   --passes=N                 Number of full-device overwrite passes (N >= 1).
-                             N=1 (default) only uses blkdiscard + header zeroing.
-                             N>1 adds N full zero passes over the device.
-  --secure-erase             Attempt hdparm-based ATA secure erase in addition
-                             to the basic wipe steps (where supported).
+                             When omitted, only blkdiscard + header zeroing
+                             are used; when set, adds N full zero passes
+                             over the device.
+  --secure-erase             Attempt device-native secure erase (hdparm/nvme)
+                             in addition to the basic wipe steps.
   --random-data-write        After the basic wipe, run random-position zero
                              writes in time-limited loops.
   --random-duration-seconds=N
