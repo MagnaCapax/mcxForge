@@ -14,6 +14,8 @@ declare(strict_types=1);
  * storageWipe runner (per-device confirmation by default,
  * --dry-run support, system disk skipped unless explicitly
  * included, etc.).
+ *
+ * @author Aleksi Ursin
  */
 
 require_once __DIR__ . '/../lib/php/StorageWipe.php';
@@ -22,4 +24,3 @@ $argvPreset = $argv;
 array_splice($argvPreset, 1, 0, '--passes=7');
 
 exit(\mcxForge\StorageWipeRunner::run($argvPreset));
-

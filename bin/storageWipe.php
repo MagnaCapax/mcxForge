@@ -24,9 +24,10 @@ declare(strict_types=1);
  *
  * This tool is intentionally destructive when used without --dry-run.
  * Tests MUST only exercise the dry-run behaviour.
+ *
+ * @author Aleksi Ursin
  */
 
 require_once __DIR__ . '/../lib/php/StorageWipe.php';
 
 exit(\mcxForge\StorageWipeRunner::run($argv));
-

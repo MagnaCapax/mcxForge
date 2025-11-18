@@ -1,4 +1,4 @@
-# ADR-0006: Storage Wipe Tool and Destructive Testing Guardrails
+# ADR-0007: Storage Wipe Tool and Destructive Testing Guardrails
 
 ## Metadata
 - Author: Aleksi Ursin
