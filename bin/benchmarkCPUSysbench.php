@@ -3,6 +3,10 @@
 
 declare(strict_types=1);
 
+/**
+ * @author Aleksi Ursin
+ */
+
 if (!defined('EXIT_OK')) {
     define('EXIT_OK', 0);
 }
@@ -10,17 +14,17 @@ if (!defined('EXIT_ERROR')) {
     define('EXIT_ERROR', 1);
 }
 
-require_once __DIR__ . '/../lib/php/Benchmark/CpuInfo.php';
-require_once __DIR__ . '/../lib/php/Benchmark/SysbenchCpuRunner.php';
+require_once __DIR__ . '/../lib/php/benchmark/CPUInfo.php';
+require_once __DIR__ . '/../lib/php/benchmark/SysbenchCPURunner.php';
 
-use mcxForge\Benchmark\CpuInfo;
-use mcxForge\Benchmark\SysbenchCpuRunner;
+use mcxForge\Benchmark\CPUInfo;
+use mcxForge\Benchmark\SysbenchCPURunner;
 
 function benchmarkCPUSysbenchMain(array $argv): int
 {
     [$duration, $threads, $scoreOnly, $colorEnabled] = benchmarkCPUSysbenchParseArguments($argv);
 
-    $runner = new SysbenchCpuRunner();
+    $runner = new SysbenchCPURunner();
     $logFile = $runner->buildLogFilePath();
 
     $titleColor = $colorEnabled ? "\033[1;34m" : '';
@@ -115,7 +119,7 @@ function benchmarkCPUSysbenchMain(array $argv): int
 function benchmarkCPUSysbenchParseArguments(array $argv): array
 {
     $duration = 60;
-    $threads = CpuInfo::detectLogicalCores();
+    $threads = CPUInfo::detectLogicalCores();
     $scoreOnly = false;
     $colorEnabled = true;
 

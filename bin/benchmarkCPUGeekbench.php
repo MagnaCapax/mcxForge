@@ -12,6 +12,8 @@ declare(strict_types=1);
  *   {{SCORE:12345}}
  *
  * When --score-only is used, only the SCORE line is printed.
+ *
+ * @author Aleksi Ursin
  */
 
 if (!defined('EXIT_OK')) {
@@ -21,7 +23,7 @@ if (!defined('EXIT_ERROR')) {
     define('EXIT_ERROR', 1);
 }
 
-require_once __DIR__ . '/../lib/php/Benchmark/GeekbenchRunner.php';
+require_once __DIR__ . '/../lib/php/benchmark/GeekbenchRunner.php';
 
 use mcxForge\Benchmark\GeekbenchRunner;
 

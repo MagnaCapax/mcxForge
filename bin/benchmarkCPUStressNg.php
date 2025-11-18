@@ -3,6 +3,10 @@
 
 declare(strict_types=1);
 
+/**
+ * @author Aleksi Ursin
+ */
+
 if (!defined('EXIT_OK')) {
     define('EXIT_OK', 0);
 }
@@ -10,10 +14,10 @@ if (!defined('EXIT_ERROR')) {
     define('EXIT_ERROR', 1);
 }
 
-require_once __DIR__ . '/../lib/php/Benchmark/CpuInfo.php';
+require_once __DIR__ . '/../lib/php/benchmark/CPUInfo.php';
 require_once __DIR__ . '/../lib/php/Benchmark/StressNgRunner.php';
 
-use mcxForge\Benchmark\CpuInfo;
+use mcxForge\Benchmark\CPUInfo;
 use mcxForge\Benchmark\StressNgRunner;
 
 function benchmarkCPUStressNgMain(array $argv): int
@@ -115,7 +119,7 @@ function benchmarkCPUStressNgMain(array $argv): int
 function benchmarkCPUStressNgParseArguments(array $argv): array
 {
     $duration = 120;
-    $cpuCount = CpuInfo::detectLogicalCores();
+    $cpuCount = CPUInfo::detectLogicalCores();
     $scoreOnly = false;
     $colorEnabled = true;
 

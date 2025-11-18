@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace mcxForge\Benchmark;
 
-final class CpuInfo
+final class CPUInfo
 {
     public static function detectLogicalCores(): int
     {

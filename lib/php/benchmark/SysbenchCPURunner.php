@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace mcxForge\Benchmark;
 
-final class SysbenchCpuRunner
+final class SysbenchCPURunner
 {
     public function buildLogFilePath(?\DateTimeImmutable $now = null): string
     {
@@ -67,3 +67,4 @@ final class SysbenchCpuRunner
         return is_string($result) && trim($result) !== '';
     }
 }
+

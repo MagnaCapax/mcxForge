@@ -10,7 +10,7 @@
   },
   "autoload": {
     "psr-4": {
-      "mcxForge\\Benchmark\\": "lib/php/Benchmark/"
+      "mcxForge\\Benchmark\\": "lib/php/benchmark/"
     }
   },
   "config": {
