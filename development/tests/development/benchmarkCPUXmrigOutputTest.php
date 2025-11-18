@@ -68,35 +68,15 @@ final class benchmarkCPUXmrigOutputTest extends testCase
     {
         $runner = new XmrigRunner();
 
-        $address = $runner->resolveBeneficiaryAddress(null, 'monero');
+        $address = $runner->resolveBeneficiaryAddress(null, '');
         $this->assertTrue($address !== '');
-        $this->assertTrue(str_starts_with($address, '8'));
-    }
-
-    public function testResolveBeneficiaryTorDefault(): void
-    {
-        $runner = new XmrigRunner();
-
-        $address = $runner->resolveBeneficiaryAddress(null, 'tor');
-        $this->assertTrue($address !== '');
-        $this->assertTrue(str_starts_with($address, '4'));
-    }
-
-    public function testResolveBeneficiaryUnknownKeywordFallsBackToMonero(): void
-    {
-        $runner = new XmrigRunner();
-
-        $addressUnknown = $runner->resolveBeneficiaryAddress(null, 'unknown-beneficiary');
-        $addressMonero = $runner->resolveBeneficiaryAddress(null, 'monero');
-
-        $this->assertEquals($addressMonero, $addressUnknown);
     }
 
     public function testResolveBeneficiaryCustomAddressPreferred(): void
     {
         $runner = new XmrigRunner();
 
-        $address = $runner->resolveBeneficiaryAddress('CustomXmrAddress', 'monero');
+        $address = $runner->resolveBeneficiaryAddress('CustomXmrAddress', '');
         $this->assertEquals('CustomXmrAddress', $address);
     }
 
@@ -108,7 +88,6 @@ final class benchmarkCPUXmrigOutputTest extends testCase
             '/usr/bin/xmrig',
             600,
             'moneroocean',
-            'monero',
             null,
             'mcxForgeHost',
             5
@@ -127,7 +106,6 @@ final class benchmarkCPUXmrigOutputTest extends testCase
             '/usr/bin/xmrig',
             600,
             'moneroocean',
-            'monero',
             null,
             'mcxForge QA Host',
             10
@@ -145,7 +123,6 @@ final class benchmarkCPUXmrigOutputTest extends testCase
             '/usr/bin/xmrig',
             -10,
             'moneroocean',
-            'monero',
             null
         );
 
@@ -160,7 +137,6 @@ final class benchmarkCPUXmrigOutputTest extends testCase
             '/usr/bin/xmrig',
             600,
             'moneroocean',
-            'monero',
             'CustomXmrAddress'
         );
 
@@ -177,7 +153,6 @@ final class benchmarkCPUXmrigOutputTest extends testCase
             '/usr/bin/xmrig',
             1800,
             'p2pool',
-            'tor',
             null
         );
 
@@ -193,7 +168,6 @@ final class benchmarkCPUXmrigOutputTest extends testCase
             '/usr/bin/xmrig',
             0,
             'moneroocean',
-            'monero',
             null
         );
 

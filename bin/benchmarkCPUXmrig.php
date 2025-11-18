@@ -38,7 +38,7 @@ use mcxForge\Benchmark\XmrigRunner;
 
 function benchmarkCPUXmrigMain(array $argv): int
 {
-    [$duration, $pool, $beneficiary, $address, $scoreOnly, $colorEnabled] = benchmarkCPUXmrigParseArguments($argv);
+    [$duration, $pool, $address, $scoreOnly, $colorEnabled] = benchmarkCPUXmrigParseArguments($argv);
 
     $runner = new XmrigRunner();
     $logFile = $runner->buildLogFilePath();
@@ -53,15 +53,17 @@ function benchmarkCPUXmrigMain(array $argv): int
             ? sprintf('~%d minute benchmark', (int) round($duration / 60))
             : 'indefinite burn-in (until interrupted)';
 
+        $addressLabel = $address === null ? 'donation address pool' : 'explicit address';
+
         fwrite(
             STDOUT,
             sprintf(
-                "%s[benchmarkCPUXmrig]%s Starting xmrig %s on pool '%s' with beneficiary '%s'%s\n",
+                "%s[benchmarkCPUXmrig]%s Starting xmrig %s on pool '%s' using %s%s\n",
                 $titleColor,
                 $resetColor,
                 $modeLabel,
                 $pool,
-                $beneficiary,
+                $addressLabel,
                 $resetColor
             )
         );
@@ -93,13 +95,7 @@ function benchmarkCPUXmrigMain(array $argv): int
         return EXIT_ERROR;
     }
 
-    $command = $runner->buildCommand(
-        $binaryPath,
-        $duration,
-        $pool,
-        $beneficiary,
-        $address
-    );
+    $command = $runner->buildCommand($binaryPath, $duration, $pool, $address);
 
     $output = [];
     $exitCode = 0;
@@ -165,20 +161,19 @@ function benchmarkCPUXmrigMain(array $argv): int
         }
     }
 
-    fwrite(STDOUT, sprintf("{{SCORE:%.2f}}\n", $average));
+    fwrite(STDOUT, sprintf("[benchmarkCPUXmrig] {{SCORE:%.2f}}\n", $average));
 
     return $exitCode === 0 ? EXIT_OK : EXIT_ERROR;
 }
 
 /**
- * @return array{0:int,1:string,2:string,3:?(string),4:bool,5:bool}
+ * @return array{0:int,1:string,2:?(string),3:bool,4:bool}
  */
 function benchmarkCPUXmrigParseArguments(array $argv): array
 {
     $runner = new XmrigRunner();
     $duration = $runner->getDefaultDurationSeconds();
     $pool = 'moneroocean';
-    $beneficiary = 'monero';
     $address = null;
     $scoreOnly = false;
     $colorEnabled = true;
@@ -232,17 +227,6 @@ function benchmarkCPUXmrigParseArguments(array $argv): array
             continue;
         }
 
-        if (str_starts_with($arg, '--beneficiary=')) {
-            $value = substr($arg, strlen('--beneficiary='));
-            $value = trim($value);
-            if ($value === '') {
-                fwrite(STDERR, "Error: --beneficiary must not be empty\n");
-                exit(EXIT_ERROR);
-            }
-            $beneficiary = $value;
-            continue;
-        }
-
         if (str_starts_with($arg, '--address=')) {
             $value = substr($arg, strlen('--address='));
             $value = trim($value);
@@ -258,18 +242,18 @@ function benchmarkCPUXmrigParseArguments(array $argv): array
         exit(EXIT_ERROR);
     }
 
-    return [$duration, $pool, $beneficiary, $address, $scoreOnly, $colorEnabled];
+    return [$duration, $pool, $address, $scoreOnly, $colorEnabled];
 }
 
 function benchmarkCPUXmrigPrintHelp(): void
 {
     $help = <<<TEXT
-Usage: benchmarkCPUXmrig.php [--duration=SECONDS] [--pool=NAME] [--beneficiary=NAME] [--address=XMR] [--score-only] [--no-color]
+Usage: benchmarkCPUXmrig.php [--duration=SECONDS] [--pool=NAME] [--address=XMR] [--score-only] [--no-color]
 
 Run an xmrig-based Monero mining workload as a CPU benchmark and QA tool.
 
 By default, this command:
-  - Connects to a Monero mining pool using the Monero Project donation address.
+  - Connects to a Monero mining pool using a donation address selected at random from a small pool.
   - Runs for 30 minutes, then stops.
   - Logs xmrig output under /tmp/benchmarkCPUXmrig-YYYYMMDD.log.
   - Parses speed lines to compute an average hash rate in H/s.
@@ -284,11 +268,8 @@ Options:
                          - moneroocean   (default; gulf.moneroocean.stream:20128)
                          - p2pool        (p2pool.io:3333)
                          - p2pool-mini   (mini.p2pool.io:3333)
-  --beneficiary=NAME   Donation beneficiary when no explicit address is given:
-                         - monero        (default; Monero Project donation)
-                         - tor           (Tor Project donation)
   --address=XMR        Explicit Monero address to mine to. When provided,
-                       this overrides the beneficiary profiles above.
+                       this overrides the built-in donation address pool.
   --score-only         Print only the SCORE line, nothing else.
   --no-color           Disable ANSI colors in human output.
   -h, --help           Show this help message.
@@ -306,4 +287,3 @@ TEXT;
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit(benchmarkCPUXmrigMain($argv));
 }
-

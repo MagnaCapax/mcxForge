@@ -96,10 +96,10 @@ final class XmrigRunner
 
         $normalized = trim(strtolower($beneficiary));
         if ($normalized === '' || !isset(self::ADDRESSES_BY_BENEFICIARY[$normalized])) {
-            $normalized = self::BENEFICIARY_MONERO;
+            $pool = self::ADDRESSES_BY_BENEFICIARY[self::BENEFICIARY_MONERO];
+        } else {
+            $pool = self::ADDRESSES_BY_BENEFICIARY[$normalized];
         }
-
-        $pool = self::ADDRESSES_BY_BENEFICIARY[$normalized];
         if (count($pool) === 0) {
             // Fail forward: fall back to monero donation address when pool is empty.
             $fallbackPool = self::ADDRESSES_BY_BENEFICIARY[self::BENEFICIARY_MONERO];
@@ -139,7 +139,6 @@ final class XmrigRunner
         string $binaryPath,
         int $durationSeconds,
         string $pool,
-        string $beneficiary,
         ?string $explicitAddress,
         string $rigId = 'mcxForge',
         int $printIntervalSeconds = self::DEFAULT_PRINT_INTERVAL_SECONDS
@@ -147,7 +146,7 @@ final class XmrigRunner
         $durationSeconds = max(0, $durationSeconds);
 
         $poolConfig = $this->resolvePool($pool);
-        $address = $this->resolveBeneficiaryAddress($explicitAddress, $beneficiary);
+        $address = $this->resolveBeneficiaryAddress($explicitAddress, '');
 
         $url = sprintf('%s:%d', $poolConfig['host'], $poolConfig['port']);
 
