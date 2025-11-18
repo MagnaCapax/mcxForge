@@ -25,7 +25,7 @@ if (!defined('EXIT_ERROR')) {
 
 function storageTestSmartMain(array $argv): int
 {
-    [$testType, $resultsOnly] = parseSmartArguments($argv);
+    [$testType, $resultsOnly, $colorEnabled] = parseSmartArguments($argv);
 
     $devices = loadSmartCapableDevices();
     if ($devices === null) {
@@ -43,18 +43,23 @@ function storageTestSmartMain(array $argv): int
     }
 
     $results = collectSmartResults($devices);
-    renderSmartResultsHuman($testType, $results, $resultsOnly);
+    renderSmartResultsHuman($testType, $results, $resultsOnly, $colorEnabled);
 
     return EXIT_OK;
 }
 
 /**
- * @return array{0:string,1:bool}
+ * @return array{0:string,1:bool,2:bool}
  */
 function parseSmartArguments(array $argv): array
 {
     $testType = 'short';
     $resultsOnly = false;
+    $colorEnabled = true;
+
+    if (getenv('NO_COLOR') !== false) {
+        $colorEnabled = false;
+    }
 
     $args = $argv;
     array_shift($args);
@@ -80,11 +85,16 @@ function parseSmartArguments(array $argv): array
             continue;
         }
 
+        if ($arg === '--no-color') {
+            $colorEnabled = false;
+            continue;
+        }
+
         fwrite(STDERR, "Error: unrecognized argument '$arg'. Use --help for usage.\n");
         exit(EXIT_ERROR);
     }
 
-    return [$testType, $resultsOnly];
+    return [$testType, $resultsOnly, $colorEnabled];
 }
 
 /**
@@ -274,54 +284,93 @@ function parseSmartOutput(array $lines): array
 /**
  * @param array<int,array<string,mixed>> $results
  */
-function renderSmartResultsHuman(string $testType, array $results, bool $resultsOnly): void
+function renderSmartResultsHuman(string $testType, array $results, bool $resultsOnly, bool $colorEnabled): void
 {
+    $titleColor = $colorEnabled ? "\033[1;34m" : '';
+    $deviceColor = $colorEnabled ? "\033[0;36m" : '';
+    $valueColor = $colorEnabled ? "\033[1;32m" : '';
+    $resetColor = $colorEnabled ? "\033[0m" : '';
+
     if (!$resultsOnly) {
-        echo sprintf(
-            "SMART %s test commands issued to %d device(s).\n",
-            $testType,
-            count($results)
+        fwrite(
+            STDOUT,
+            sprintf(
+                "%s[storageTestSmart]%s SMART %s test commands issued to %d device(s).\n",
+                $titleColor,
+                $resetColor,
+                $testType,
+                count($results)
+            )
         );
-        echo "Note: self-tests may still be running; results show the latest recorded entry.\n\n";
+        fwrite(
+            STDOUT,
+            sprintf(
+                "%s[storageTestSmart]%s Note: self-tests may still be running; results show the latest recorded entry.\n\n",
+                $titleColor,
+                $resetColor
+            )
+        );
     }
 
     foreach ($results as $result) {
-        $path = $result['path'] ?? '';
+        $path = (string)($result['path'] ?? '');
         $bus = $result['bus'] ?? '';
         $model = $result['model'] ?? '';
         $hours = $result['powerOnHours'];
         $selfTest = $result['lastSelfTestLine'] ?? null;
 
-        echo $path;
+        $label = $path;
         if ($bus || $model) {
-            echo ' (';
+            $parts = [];
             if ($bus) {
-                echo $bus;
-            }
-            if ($bus && $model) {
-                echo ', ';
+                $parts[] = $bus;
             }
             if ($model) {
-                echo $model;
+                $parts[] = $model;
             }
-            echo ')';
+            $label .= ' (' . implode(', ', $parts) . ')';
         }
-        echo PHP_EOL;
 
-        echo '  Power_On_Hours: ';
-        echo $hours === null ? 'N/A' : (string)$hours;
-        echo PHP_EOL;
+        fwrite(
+            STDOUT,
+            sprintf(
+                "%s[storageTestSmart]%s %s%s%s\n",
+                $titleColor,
+                $resetColor,
+                $deviceColor,
+                $label,
+                $resetColor
+            )
+        );
 
-        echo '  Last self-test: ';
-        echo $selfTest === null ? 'N/A' : $selfTest;
-        echo PHP_EOL . PHP_EOL;
+        $hoursText = $hours === null ? 'N/A' : (string)$hours;
+        fwrite(
+            STDOUT,
+            sprintf(
+                "  Power_On_Hours: %s%s%s\n",
+                $valueColor,
+                $hoursText,
+                $resetColor
+            )
+        );
+
+        $selfText = $selfTest === null ? 'N/A' : (string)$selfTest;
+        fwrite(
+            STDOUT,
+            sprintf(
+                "  Last self-test: %s%s%s\n\n",
+                $valueColor,
+                $selfText,
+                $resetColor
+            )
+        );
     }
 }
 
 function printSmartHelp(): void
 {
     $help = <<<TEXT
-Usage: storageTestSmart.php [--test=short|long] [--results-only]
+Usage: storageTestSmart.php [--test=short|long] [--results-only] [--no-color]
 
 Run SMART self-tests on all SMART-capable devices and show power-on hours and
 the latest recorded self-test entry per device.
@@ -331,6 +380,7 @@ Options:
   --test=long       Issue smartctl -t long.
   --results-only    Do not start new tests; only display current SMART info
                     and the latest self-test log entries.
+  --no-color        Disable ANSI colors in human output.
   -h, --help        Show this help message.
 
 Notes:

@@ -323,8 +323,12 @@ function benchmarkStorageIOPingParseIOPS(array $lines): ?float
             continue;
         }
 
-        if (preg_match('/([0-9]+(?:\.[0-9]+)?)\s*iops/i', $trimmed, $matches) === 1) {
-            return (float)$matches[1];
+        if (preg_match('/([0-9]+(?:\.[0-9]+)?)\s*(?:k\s*)?iops/i', $trimmed, $matches) === 1) {
+            $value = (float)$matches[1];
+            if (stripos($trimmed, 'k iops') !== false) {
+                $value *= 1000.0;
+            }
+            return $value;
         }
     }
 

@@ -16,7 +16,7 @@ final class benchmarkStorageIOPingParseTest extends testCase
         ];
 
         $score = \benchmarkStorageIOPingParseIOPS($lines);
-        $this->assertEquals(1.11, $score);
+        $this->assertEquals(1110.0, $score);
     }
 
     public function testParseIOPSFromSummaryLineWithoutKPrefix(): void
@@ -62,4 +62,3 @@ final class benchmarkStorageIOPingParseTest extends testCase
         $this->assertEquals(25, $count);
     }
 }
-
