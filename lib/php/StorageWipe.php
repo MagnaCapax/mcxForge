@@ -62,6 +62,14 @@ final class StorageWipeRunner
             return EXIT_ERROR;
         }
 
+        if ($options['stopMdArrays']) {
+            $mdOk = self::stopMdArraysForDevices($devices, $options['dryRun']);
+            if (!$mdOk) {
+                Logger::logStderr("Error: failed to stop one or more MD RAID arrays; aborting wipe.\n");
+                return EXIT_ERROR;
+            }
+        }
+
         return self::runForDevices($devices, $options);
     }
 
@@ -78,6 +86,8 @@ final class StorageWipeRunner
             'randomDurationSeconds' => 300,
             'randomWorkersPerDevice' => 2,
             'secureErase' => false,
+            'autoSecureErase' => true,
+            'stopMdArrays' => false,
             'passes' => 0,
             'includeSystemDevice' => false,
             'devices' => [],
@@ -109,6 +119,16 @@ final class StorageWipeRunner
 
             if ($arg === '--secure-erase') {
                 $options['secureErase'] = true;
+                continue;
+            }
+
+            if ($arg === '--no-auto-secure-erase') {
+                $options['autoSecureErase'] = false;
+                continue;
+            }
+
+            if ($arg === '--stop-md-arrays') {
+                $options['stopMdArrays'] = true;
                 continue;
             }
 
@@ -234,6 +254,158 @@ final class StorageWipeRunner
         }
 
         return $devices;
+    }
+
+    /**
+     * Stop MD RAID arrays that involve any of the target devices.
+     *
+     * This function:
+     *  - Uses inventoryStorageTopology to discover MD arrays and their members.
+     *  - For any MD array that has at least one member disk in the target set:
+     *      - Unmounts any mountpoints in its subtree.
+     *      - Runs mdadm --stop on the MD device.
+     *
+     * Returns true when all relevant arrays were stopped successfully (or
+     * none were found), false when any unmount/stop command fails.
+     *
+     * @param array<int,array<string,mixed>> $devices
+     */
+    private static function stopMdArraysForDevices(array $devices, bool $dryRun): bool
+    {
+        if (!\function_exists('inventoryStorageTopologyCollect')) {
+            Logger::logStderr("Error: inventoryStorageTopologyCollect not available; cannot stop MD arrays.\n");
+            return false;
+        }
+
+        /** @var array<string,mixed>|null $topology */
+        $topology = \inventoryStorageTopologyCollect();
+        if (!is_array($topology) || !isset($topology['blockdevices']) || !is_array($topology['blockdevices'])) {
+            Logger::logStderr("Error: failed to obtain storage topology; cannot stop MD arrays.\n");
+            return false;
+        }
+
+        $targetDisks = [];
+        foreach ($devices as $dev) {
+            if (isset($dev['name']) && is_string($dev['name']) && $dev['name'] !== '') {
+                $targetDisks[] = $dev['name'];
+            }
+        }
+
+        if (count($targetDisks) === 0) {
+            return true;
+        }
+
+        $targetSet = array_flip($targetDisks);
+
+        /** @var array<int,array<string,mixed>> $roots */
+        $roots = $topology['blockdevices'];
+        $arraysToStop = [];
+
+        foreach ($roots as $node) {
+            self::collectMdArraysFromNode($node, $targetSet, $arraysToStop);
+        }
+
+        if (count($arraysToStop) === 0) {
+            return true;
+        }
+
+        $ok = true;
+
+        foreach ($arraysToStop as $array) {
+            $mdPath = (string) $array['path'];
+            if ($mdPath === '') {
+                continue;
+            }
+
+            /** @var array<int,string> $mountpoints */
+            $mountpoints = $array['mountpoints'];
+
+            foreach ($mountpoints as $mp) {
+                $cmd = 'umount ' . escapeshellarg($mp);
+                echo "=== MD RAID {$mdPath}: unmounting {$mp}\n";
+                if (!self::runCommand($cmd, $dryRun)) {
+                    Logger::logStderr("Error: failed to unmount {$mp} for MD array {$mdPath}.\n");
+                    $ok = false;
+                }
+            }
+
+            $stopCmd = 'mdadm --stop ' . escapeshellarg($mdPath);
+            echo "=== MD RAID {$mdPath}: stopping array\n";
+            if (!self::runCommand($stopCmd, $dryRun)) {
+                Logger::logStderr("Error: failed to stop MD array {$mdPath}.\n");
+                $ok = false;
+            }
+        }
+
+        return $ok;
+    }
+
+    /**
+     * @param array<string,int> $targetSet
+     * @param array<int,array<string,mixed>> $arraysToStop
+     */
+    private static function collectMdArraysFromNode(array $node, array $targetSet, array &$arraysToStop): void
+    {
+        $type = isset($node['type']) ? (string) $node['type'] : '';
+        $name = isset($node['name']) ? (string) $node['name'] : '';
+        $path = isset($node['path']) && $node['path'] !== null ? (string) $node['path'] : ($name !== '' ? '/dev/' . $name : '');
+
+        $disks = [];
+        $mountpoints = [];
+        self::collectDisksAndMountpoints($node, $disks, $mountpoints);
+
+        $intersects = false;
+        foreach ($disks as $diskName) {
+            if (isset($targetSet[$diskName])) {
+                $intersects = true;
+                break;
+            }
+        }
+
+        if ($intersects && strpos($type, 'raid') === 0 && $path !== '') {
+            $arraysToStop[] = [
+                'name' => $name,
+                'path' => $path,
+                'mountpoints' => array_values(array_unique($mountpoints)),
+                'memberDisks' => $disks,
+            ];
+        }
+
+        if (isset($node['children']) && is_array($node['children'])) {
+            /** @var array<int,array<string,mixed>> $children */
+            $children = $node['children'];
+            foreach ($children as $child) {
+                self::collectMdArraysFromNode($child, $targetSet, $arraysToStop);
+            }
+        }
+    }
+
+    /**
+     * @param array<string,mixed> $node
+     * @param array<int,string>   $disks
+     * @param array<int,string>   $mountpoints
+     */
+    private static function collectDisksAndMountpoints(array $node, array &$disks, array &$mountpoints): void
+    {
+        $type = isset($node['type']) ? (string) $node['type'] : '';
+        $name = isset($node['name']) ? (string) $node['name'] : '';
+        $mount = isset($node['mountpoint']) && $node['mountpoint'] !== null ? (string) $node['mountpoint'] : '';
+
+        if ($type === 'disk' && $name !== '') {
+            $disks[] = $name;
+        }
+
+        if ($mount !== '') {
+            $mountpoints[] = $mount;
+        }
+
+        if (isset($node['children']) && is_array($node['children'])) {
+            /** @var array<int,array<string,mixed>> $children */
+            $children = $node['children'];
+            foreach ($children as $child) {
+                self::collectDisksAndMountpoints($child, $disks, $mountpoints);
+            }
+        }
     }
 
     /**
@@ -501,8 +673,9 @@ final class StorageWipeRunner
         }
 
         // Optional secure erase. We still run the basic steps; this is additive.
-        $autoAtaSecureErase = $isSsd && in_array($bus, ['SATA', 'SAS'], true);
-        $autoNvmeSecureErase = $isSsd && $bus === 'NVME';
+        $autoAllowed = (bool) ($options['autoSecureErase'] ?? true);
+        $autoAtaSecureErase = $autoAllowed && $isSsd && in_array($bus, ['SATA', 'SAS'], true);
+        $autoNvmeSecureErase = $autoAllowed && $isSsd && $bus === 'NVME';
         $explicitSecure = (bool) $options['secureErase'];
 
         if ($explicitSecure || $autoAtaSecureErase || $autoNvmeSecureErase) {
@@ -662,6 +835,10 @@ Options:
                              over the device.
   --secure-erase             Attempt device-native secure erase (hdparm/nvme)
                              in addition to the basic wipe steps.
+  --no-auto-secure-erase     Disable automatic secure erase for SSDs; only
+                             perform secure erase when --secure-erase is set.
+  --stop-md-arrays           Unmount and stop MD RAID arrays that contain
+                             target disks before wiping; abort if this fails.
   --random-data-write        After the basic wipe, run random-position zero
                              writes in time-limited loops.
   --random-duration-seconds=N

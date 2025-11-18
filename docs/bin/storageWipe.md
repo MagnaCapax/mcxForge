@@ -65,6 +65,16 @@ bin/storageWipe.php [options]
   On SSDs, secure erase may also be auto‑enabled based on bus type and
   rotational flag; a log line is emitted when auto‑enabled.
 
+- `--no-auto-secure-erase`  
+  Disable automatic secure‑erase enablement for SSDs. When this flag is set,
+  secure erase is only performed when `--secure-erase` is explicitly given.
+
+- `--stop-md-arrays`  
+  Before wiping, unmount and stop any MD RAID arrays that contain one or more
+  of the target disks. If any unmount or `mdadm --stop` operation fails, the
+  wipe is aborted. This is intended for bare‑metal rescue flows where all
+  arrays should be torn down before destructive operations.
+
 - `--random-data-write`  
   After the baseline sequence (and any full‑device passes / secure erase),
   run time‑limited random‑position zero writes across the device. This is
