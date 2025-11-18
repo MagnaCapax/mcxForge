@@ -318,11 +318,16 @@ final class GeekbenchRunner
 
     private function extractTrailingInteger(string $line): ?int
     {
-        if (preg_match('/([0-9]{2,})\s*$/', $line, $matches) === 1) {
-            return (int)$matches[1];
+        if (preg_match('/([0-9][0-9., ]*)\s*$/', $line, $matches) !== 1) {
+            return null;
         }
 
-        return null;
+        $digitsOnly = preg_replace('/\D/', '', $matches[1]);
+        if (!is_string($digitsOnly) || $digitsOnly === '' || strlen($digitsOnly) < 2) {
+            return null;
+        }
+
+        return (int)$digitsOnly;
     }
 
     public function buildLogFilePath(string $major, ?\DateTimeImmutable $now = null): string
@@ -338,4 +343,3 @@ final class GeekbenchRunner
         );
     }
 }
-

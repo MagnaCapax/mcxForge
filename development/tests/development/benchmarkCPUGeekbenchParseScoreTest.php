@@ -128,4 +128,28 @@ final class benchmarkCPUGeekbenchParseScoreTest extends testCase
         $score = $runner->parseScore($lines, '6');
         $this->assertEquals(4444, $score);
     }
+
+    public function testParseScoreHandlesThousandsSeparatorComma(): void
+    {
+        $runner = new GeekbenchRunner();
+
+        $lines = [
+            'Multi-Core Score            12,345',
+        ];
+
+        $score = $runner->parseScore($lines, '6');
+        $this->assertEquals(12345, $score);
+    }
+
+    public function testParseScoreHandlesThousandsSeparatorSpace(): void
+    {
+        $runner = new GeekbenchRunner();
+
+        $lines = [
+            'Multi-Core Score            12 345',
+        ];
+
+        $score = $runner->parseScore($lines, '6');
+        $this->assertEquals(12345, $score);
+    }
 }
