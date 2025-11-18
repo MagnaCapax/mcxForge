@@ -12,6 +12,8 @@ declare(strict_types=1);
  *
  * This script is read‑only and intended for use on live systems to feed
  * qualification and diagnostics flows.
+ *
+ * @author Aleksi Ursin
  */
 
 if (!defined('EXIT_OK')) {

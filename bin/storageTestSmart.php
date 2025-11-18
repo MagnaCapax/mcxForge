@@ -12,6 +12,8 @@ declare(strict_types=1);
  *
  * This script is read-only with respect to user data; it only starts
  * SMART self-tests and reads their status.
+ *
+ * @author Aleksi Ursin
  */
 
 if (!defined('EXIT_OK')) {
