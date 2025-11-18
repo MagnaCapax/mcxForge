@@ -6,6 +6,8 @@ set -euo pipefail
 # - Filenames under bin/ and development/tests/development/ must be:
 #     ^[a-z][a-zA-Z0-9]*\.php$
 #   (lowercase first letter, then letters/digits, .php)
+# - Filenames under lib/php/ must use StudlyCaps:
+#     ^[A-Z][A-Za-z0-9]*\.php$
 # - Class names should follow PSR-ish conventions:
 #     - bin/ entrypoints: mostly functions; we do not enforce class style there.
 #     - lib/php/ classes: StudlyCaps (^[A-Z][A-Za-z0-9]*$).
@@ -16,6 +18,11 @@ VIOLATIONS=0
 is_camel_file() {
   local base="$1"
   [[ "$base" =~ ^[a-z][a-zA-Z0-9]*\.php$ ]]
+}
+
+is_lib_php_file() {
+  local base="$1"
+  [[ "$base" =~ ^[A-Z][A-Za-z0-9]*\.php$ ]]
 }
 
 is_psr_class() {
@@ -39,6 +46,12 @@ check_tree_files_only() {
 check_tree_with_classes() {
   local dir="$1"
   while IFS= read -r -d '' f; do
+    local base
+    base="$(basename "$f")"
+    if ! is_lib_php_file "$base"; then
+      echo "filename violation: $f" >&2
+      VIOLATIONS=$((VIOLATIONS+1))
+    fi
     # Extract declared classes/interfaces/traits in this file.
     while read -r kind name; do
       if ! is_psr_class "$name"; then
