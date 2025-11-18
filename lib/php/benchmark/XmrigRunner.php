@@ -21,11 +21,28 @@ final class XmrigRunner
     private const BENEFICIARY_MONERO = 'monero';
     private const BENEFICIARY_TOR = 'tor';
 
-    // Monero Project donation address (as provided).
-    private const ADDRESS_MONERO_PROJECT = '888tNkZrPN6JsEgekjMnABU4TBzc2Dt29EPAvkRxbANsAnjyPbb3iQ1YBRk1UXcdRsiKc9dhwMVgN5S9cQUiyoogDavup3H';
-
-    // Tor Project donation address (as provided).
-    private const ADDRESS_TOR_PROJECT = '44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A';
+    /**
+     * Donation address pools by beneficiary keyword.
+     *
+     * Each list is treated as equal-weight; one address is picked at random
+     * per run when no explicit address is provided.
+     *
+     * The current configuration uses a single public donation address per
+     * beneficiary, but the structure allows adding more later without
+     * changing call sites.
+     *
+     * @var array<string,array<int,string>>
+     */
+    private const ADDRESSES_BY_BENEFICIARY = [
+        self::BENEFICIARY_MONERO => [
+            // Monero Project donation address (as provided).
+            '888tNkZrPN6JsEgekjMnABU4TBzc2Dt29EPAvkRxbANsAnjyPbb3iQ1YBRk1UXcdRsiKc9dhwMVgN5S9cQUiyoogDavup3H',
+        ],
+        self::BENEFICIARY_TOR => [
+            // Tor Project donation address (as provided).
+            '44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A',
+        ],
+    ];
 
     public function buildLogFilePath(?\DateTimeImmutable $now = null): string
     {
@@ -78,16 +95,23 @@ final class XmrigRunner
         }
 
         $normalized = trim(strtolower($beneficiary));
-        if ($normalized === '' || $normalized === self::BENEFICIARY_MONERO) {
-            return self::ADDRESS_MONERO_PROJECT;
+        if ($normalized === '' || !isset(self::ADDRESSES_BY_BENEFICIARY[$normalized])) {
+            $normalized = self::BENEFICIARY_MONERO;
         }
 
-        if ($normalized === self::BENEFICIARY_TOR) {
-            return self::ADDRESS_TOR_PROJECT;
+        $pool = self::ADDRESSES_BY_BENEFICIARY[$normalized];
+        if (count($pool) === 0) {
+            // Fail forward: fall back to monero donation address when pool is empty.
+            $fallbackPool = self::ADDRESSES_BY_BENEFICIARY[self::BENEFICIARY_MONERO];
+            return $fallbackPool[0];
         }
 
-        // Fail forward: treat unknown beneficiary keywords as Monero Project donations.
-        return self::ADDRESS_MONERO_PROJECT;
+        if (count($pool) === 1) {
+            return $pool[0];
+        }
+
+        $index = random_int(0, count($pool) - 1);
+        return $pool[$index];
     }
 
     public function resolveBinaryPath(): string
