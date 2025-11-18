@@ -42,6 +42,24 @@ The helper expects:
 - `gh` configured with `gh auth login`.
 - Optionally `codex` in `PATH` when using `--exec` (otherwise it prints the command to run manually).
 
+## Assistant-Oriented Refactor Helper
+
+To assemble a strict-rails refactor prompt focused on recent, complex code:
+
+```sh
+development/cli/refactor.sh
+```
+
+This helper:
+- Collects a summary of the last commits and their touched files.
+- Uses existing complexity snapshots under `development/var/test-logs/` (phploc/phpmd) when available.
+- Writes a verbose refactor prompt and context paths into a temporary directory under `/tmp`.
+- Encourages small, behavior-preserving refactors that favor deletion and DRY over new features.
+
+Auto-commit of assistant changes is enabled by default for refactor runs, but is guarded by:
+- A full run of `development/testing/test.sh` before attempting to commit.
+- Simple size rails: commits are skipped when the diff exceeds a configurable file/line budget (see `MCXFORGE_REFACTOR_MAX_FILES` and `MCXFORGE_REFACTOR_MAX_LINES`).
+
 ## CI Workflow
 
 - See `.github/workflows/ci.yml`. It sets up PHP 8.2, installs dev dependencies via Composer (including PHPStan), and runs `development/testing/test.sh`.

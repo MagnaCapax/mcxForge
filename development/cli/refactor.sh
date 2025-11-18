@@ -8,7 +8,7 @@ echo "[refactor] starting refactor prompt assembly…" >&1
 #
 # Defaults:
 #  - Focuses on files touched in the last N commits (default: 10)
-#  - Optionally narrows scope to a target path or mode
+#  - Optionally narrows scope to a target path
 #  - Assembles a refactor-focused prompt honoring repository rails
 #  - If --exec is provided, pipes to your assistant CLI
 #
@@ -16,7 +16,6 @@ echo "[refactor] starting refactor prompt assembly…" >&1
 #  development/cli/refactor.sh                      # build prompt; prints location
 #  development/cli/refactor.sh --commits 10         # adjust commit window
 #  development/cli/refactor.sh --target lib/php     # restrict target tree
-#  development/cli/refactor.sh --mode complexity    # hint refactor intent
 #  development/cli/refactor.sh --exec 'codex'       # invoke assistant directly
 #  development/cli/refactor.sh --prompt "..."       # custom high-level prompt
 
@@ -25,7 +24,6 @@ ROOT="$(cd "$HERE/../.." && pwd)"
 cd "$ROOT"
 
 commits=""
-mode=""
 target=""
 exec_cmd=""
 custom_prompt=""
@@ -34,10 +32,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --commits)
       commits=${2:-}
-      shift 2 || true
-      ;;
-    --mode)
-      mode=${2:-}
       shift 2 || true
       ;;
     --target)
@@ -65,7 +59,6 @@ done
 
 args=()
 [[ -n "$commits" ]] && args+=(--commits "$commits")
-[[ -n "$mode" ]] && args+=(--mode "$mode")
 [[ -n "$target" ]] && args+=(--target "$target")
 [[ -n "$custom_prompt" ]] && args+=(--prompt "$custom_prompt")
 [[ -n "$exec_cmd" ]] && args+=(--exec "$exec_cmd")

@@ -22,7 +22,6 @@ echo "[refactor-codex] start: assembling refactor context and invoking assistant
 #   development/cli/refactor-codex.sh                            # assemble prompt into refactor-codex/prompt.txt
 #   development/cli/refactor-codex.sh --commits 10               # include last 10 commits
 #   development/cli/refactor-codex.sh --target lib/php           # narrow scope to a subtree
-#   development/cli/refactor-codex.sh --mode complexity          # hint refactor intent (e.g., complexity, dead-code)
 #   development/cli/refactor-codex.sh --prompt "text..."         # use custom high-level prompt text
 #   development/cli/refactor-codex.sh --exec 'codex'             # send prompt to Codex CLI directly
 
@@ -42,7 +41,6 @@ PHPLC_LOG="$LOG_DIR/complexity-phploc.txt"
 PHPMD_LOG="$LOG_DIR/complexity-phpmd.txt"
 
 commits=10
-mode=""
 target=""
 exec_cmd=""
 custom_prompt=""
@@ -51,10 +49,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --commits)
       commits=${2:-}
-      shift 2 || true
-      ;;
-    --mode)
-      mode=${2:-}
       shift 2 || true
       ;;
     --target)
@@ -79,10 +73,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ -n "$mode" ]]; then
-  echo "[refactor-codex] mode hint: $mode" >&1
-fi
 
 if ! [[ "$commits" =~ ^[0-9]+$ ]] || [[ "$commits" -le 0 ]]; then
   echo "[refactor-codex] invalid --commits value: $commits" >&2
@@ -285,16 +275,41 @@ fi
 
 # Auto-commit any changes created by the assistant (no branches, no push).
 MCXFORGE_REFACTOR_AUTOCOMMIT=${MCXFORGE_REFACTOR_AUTOCOMMIT:-1}
+MCXFORGE_REFACTOR_MAX_FILES=${MCXFORGE_REFACTOR_MAX_FILES:-20}
+MCXFORGE_REFACTOR_MAX_LINES=${MCXFORGE_REFACTOR_MAX_LINES:-1000}
 if [[ "$MCXFORGE_REFACTOR_AUTOCOMMIT" == "1" ]]; then
   if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "[refactor-codex] auto-commit: checking for changes" >&1
     if [[ -n "$(git -C "$ROOT" status --porcelain)" ]]; then
-      msg="refactor-codex: apply assistant refactor"
-      git -C "$ROOT" add -A
-      if git -C "$ROOT" commit -m "$msg"; then
-        echo "[refactor-codex] auto-commit: committed changes" >&1
+      echo "[refactor-codex] auto-commit: running tests (development/testing/test.sh)" >&1
+      if ! bash "$DEV_DIR/testing/test.sh"; then
+        echo "[refactor-codex] auto-commit: tests failed; NOT committing changes" >&1
       else
-        echo "[refactor-codex] auto-commit: commit failed" >&1
+        shortstat=$(git -C "$ROOT" diff --shortstat HEAD 2>/dev/null || true)
+        file_count=0
+        line_count=0
+        if [[ -n "$shortstat" ]]; then
+          file_count=$(echo "$shortstat" | awk '{print $1+0}')
+          line_count=$(echo "$shortstat" | awk '{
+            ins=0; del=0;
+            for (i=1; i<=NF; i++) {
+              if ($(i+1) ~ /^insertions?\\(\\+\\),?$/) ins=$i;
+              if ($(i+1) ~ /^deletions?\\(-\\),?$/) del=$i;
+            }
+            print ins+del;
+          }')
+        fi
+        if [[ "$file_count" -gt "$MCXFORGE_REFACTOR_MAX_FILES" || "$line_count" -gt "$MCXFORGE_REFACTOR_MAX_LINES" ]]; then
+          echo "[refactor-codex] auto-commit: diff too large (files=$file_count, lines=$line_count, limits files=$MCXFORGE_REFACTOR_MAX_FILES, lines=$MCXFORGE_REFACTOR_MAX_LINES); NOT committing changes" >&1
+        else
+          msg="refactor-codex: apply assistant refactor"
+          git -C "$ROOT" add -A
+          if git -C "$ROOT" commit -m "$msg"; then
+            echo "[refactor-codex] auto-commit: committed changes" >&1
+          else
+            echo "[refactor-codex] auto-commit: commit failed" >&1
+          fi
+        fi
       fi
     else
       echo "[refactor-codex] auto-commit: no changes to commit" >&1
