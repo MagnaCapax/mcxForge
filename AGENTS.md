@@ -2,6 +2,8 @@
 
 These guidelines, and the surrounding agentic development framework used in this repository, were initially designed and assembled by Aleksi Ursin, using experience and natural-language prompting workflows for most of the initial implementation.
 
+Start with [`development/`](development/README.md): the [engineering principles](development/engineering-principles.md) explain the organisation-wide rules with their reasons and the mistakes that taught them, and list the sibling repositories' docs and decisions. [ADR-0008](docs/adr/0008-architecture-layout-and-languages.md) records this repository's architecture, layout and languages.
+
 ## Project Context
 - **Purpose**: mcxForge is a suite of command‑line tools and helpers installed under `/opt/mcxForge` on a live rescue system to qualify, identify, benchmark, and prepare bare‑metal hardware for production use.
 - **Audience**: Sysadmins on a live console and automation driven by higher‑level orchestration. Tools must be safe by default, scriptable, and usable under pressure.
@@ -17,6 +19,8 @@ These guidelines, and the surrounding agentic development framework used in this
 - Before designing new flows, scan `docs/adr/` and `docs/` for relevant decisions and architecture notes. Keep new work aligned with existing decisions or add an ADR to change them. Pull requests that contradict existing Accepted ADRs without updating or adding a new ADR should be rejected.
 
 ## Universal Engineering Principles
+The short form of [`development/engineering-principles.md`](development/engineering-principles.md), merged with this repository's own rules. Deletion first follows the SpaceX order: question the requirement, delete the part, simplify, then speed up, then automate (a needed but broken part is debugged, not deleted). Before committing, review the change with the [review unit](https://github.com/MagnaCapax/mcxPikkumies/tree/main/pikkumies/tools/development/code-review) against these rules and the ADRs.
+
 - **KISS (Keep It Simple, Stupid)**: Prefer straightforward, boring implementations. Avoid cleverness and unnecessary abstractions, especially in safety‑critical paths.
 - **DRY (Don’t Repeat Yourself)**: Reuse shared helpers and libraries. When you find copy‑paste logic, extract a common helper instead of duplicating behavior.
 - **YAGNI (You Aren’t Gonna Need It)**: Do not build features, flags, or abstractions until they are required for a concrete use‑case.
@@ -26,6 +30,8 @@ These guidelines, and the surrounding agentic development framework used in this
 - **Minimal Edits**: Keep diffs small, coherent, and reviewable. Avoid “drive‑by” changes unrelated to the task at hand.
 - **No Aliases**: Use consistent names for the same concept across scripts, flags, logs, and docs. Do not introduce alternate names or synonyms for the same thing.
 - **Stability Over Perfection**: Prefer incremental improvements that preserve working flows over large refactors. Never break existing automation or scripts without an ADR, migration path, and clear documentation.
+- **Files Around 150 Lines**: Split a file when it grows past about 150 lines or starts doing two jobs, when you are changing it anyway. A target, not a hard limit; do not mass-split old files.
+- **Tests That Can Fail**: Every change comes with a test that fails when the behaviour is broken (break it once and see). Read the test run's summary, not only its exit code.
 
 ## Safety & Operational Doctrine
 - **Safety First**: Destructive actions (wiping, repartitioning, RAID reconfiguration, firmware changes) must be guarded with explicit checks, clear prompts (where interactive), and obvious `--force` or equivalent flags for automation.
